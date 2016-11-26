@@ -1,10 +1,10 @@
 # Topaz
 
-Topaz is a db model for crystal lang.
-The model is transparent for db that doesn't require throwing any queries.
-Topaz also supports create/drop tables.
-See samples for detail.
-Depends on [crystal-lang/crystal-mysql](https://github.com/crystal-lang/crystal-mysql)
+Topaz is a db wrapper for crystal lang.  
+The model is transparent for db that doesn't require throwing any queries.  
+Topaz also supports create/drop tables.  
+See [samples](https://github.com/tbrand/topaz/blob/master/sample/model.cr) for detail.  
+Depends on [crystal-lang/crystal-mysql](https://github.com/crystal-lang/crystal-mysql)  
 
 ## Installation
 
@@ -30,6 +30,8 @@ class SampleModel < Topaz::Model
     {name: uid, type: Int32, primary: true}
   )
 end
+
+SampleModel.create_table
 
 aaa = SampleModel.create("AAA", 25, 10, 20.0, 2)
 bbb = SampleModel.create("BBB", 26, 12, 32.0, 3)
