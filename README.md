@@ -3,7 +3,7 @@
 Topaz is a db wrapper for crystal lang.  
 The model is transparent for db that doesn't require throwing any queries.  
 Topaz also supports create/drop tables.  
-See [samples](https://github.com/tbrand/topaz/blob/master/sample/model.cr) for detail.  
+See [sample code](https://github.com/tbrand/topaz/blob/master/sample/model.cr) for detail.  
 Depends on [crystal-lang/crystal-mysql](https://github.com/crystal-lang/crystal-mysql)  
 
 ## Installation
@@ -17,6 +17,24 @@ dependencies:
 ```
 
 ## Usage
+
+**1. Setup DB**
+```
+Topaz.setup("mysql://root@localhost/topaz")
+```
+
+**2. Define models**
+```
+class SampleModel < Topaz::Model
+  attrs(
+    {name: name, type: String}
+    ...
+  )
+end
+```
+
+**3. Create, find, update and delete models**
+See [sample code](https://github.com/tbrand/topaz/blob/master/sample/model.cr)
 
 ```crystal
 require "topaz"
