@@ -19,12 +19,12 @@ dependencies:
 ## Usage
 
 **1. Setup DB**
-```
+```crystal
 Topaz.setup("mysql://root@localhost/topaz")
 ```
 
 **2. Define models**
-```
+```crystal
 class SampleModel < Topaz::Model
   attrs(
     {name: name, type: String}
