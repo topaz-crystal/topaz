@@ -1,8 +1,6 @@
 # Topaz
 
-Topaz is a db wrapper for crystal lang.  
-Topaz::Model allows transparent access to db.  
-Topaz also supports create/drop tables.  
+Topaz is a simple and useful db wrapper for crystal lang.  
 See [sample code](https://github.com/tbrand/topaz/blob/master/sample/model.cr) for detail.  
 Depends on [crystal-lang/crystal-mysql](https://github.com/crystal-lang/crystal-mysql)  
 
