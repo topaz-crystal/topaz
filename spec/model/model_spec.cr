@@ -2,7 +2,7 @@
 require "../../src/topaz/model"
 
 # This is a test code for Topaz::Model
-# This needs actual table named 'topaz'
+# This spec requires actual table named 'topaz' in localhost MySQL.
 
 class MockModel < Topaz::Model
   attrs(
@@ -24,6 +24,8 @@ end
 
 Spec.before_each do
   Topaz.setup("mysql://root@localhost/topaz")
+  Topaz::Logger.debug(false)
+  Topaz::Logger.show_query(false)
   MockModel.create_table
   MockParent.create_table
   MockChild.create_table

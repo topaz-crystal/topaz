@@ -1,24 +1,49 @@
 require "mysql"
 
 module Topaz
+  # Simple and useful db wrapper for crystal-lang.
+  # Expending this class activate topaz.
+  # ```
+  # class SampleModel < Topaz::Model
+  # end
+  # ```
   class Model
-    
+    # attrs define attributes for Topaz::Model.
+    # Use NamedTuple as arguments.
+    # 'name' key defines a name of the column.
+    # 'type' key defines a type of the column.
+    # Currently, String, Int32, Float32 and Float64 are supported.
+    # 'primary' is also supported for primary key.
+    # ```
+    # attrs(
+    #   {name: name, type: String},
+    #   {name: primary_id, type: Int32, primary: true}
+    # )
+    # ```
+    # attrs generates a constructor for the model.
+    # The constructor doesn't require any keys, the order of the arguments is same as order of attrs.
+    # ```
+    # s = SampleModel.create("MyName", 3)
+    # ```
+    # Every model has 'id' as an idetifier, 'id' is automatically defined even if you don't define it in attrs.
+    # Futhemore, you should not define it in attrs that may raise compile error.
+    # See [sample code](https://github.com/tbrand/topaz/blob/master/sample/model.cr) for detail.
     macro attrs(*cols)
-      
+
       def initialize(
             {% for ch in cols %}
               @{{ch[:name]}} : {{ch[:type]}}|Nil,
             {% end %}@q = "")
       end
 
-      def initialize(
+      protected def initialize(
             @id : Int32 | Nil,
             {% for ch in cols %}
               @{{ch[:name]}} : {{ch[:type]}}|Nil,
             {% end %}@q = "")
       end
-      
-      def initialize
+
+      protected def initialize
         {% for ch in cols %}
           @{{ch[:name]}} = nil
         {% end %}
@@ -29,7 +54,7 @@ module Topaz
         return @id
       end
 
-      def query(q)
+      protected def query(q)
         @q = q
         self
       end
@@ -41,7 +66,7 @@ module Topaz
       def self.where(q : String)
         new.query("where #{q} ")
       end
-      
+
       def self.order(column : String, sort = "asc")
         new.query("order by #{column} #{sort} ")
       end
@@ -49,7 +74,7 @@ module Topaz
       def self.range(offset : Int, limit : Int)
         new.query("limit #{limit} offset #{offset} ")
       end
-      
+
       def self.select
         new.select
       end
@@ -114,7 +139,9 @@ module Topaz
           update(data)
         {% end %}
       end
-      
+
+      # This function is a trigger of the 'SELECT' query
+      # Every 'SELECT' related methods will not be launched without calling this
       def select
         
         @q = "select * from #{table_name} #{@q}"
@@ -256,6 +283,20 @@ module Topaz
       {% end %}
     end
 
+    # You can define relations for each model by 'belongs' and 'has' macros.
+    # 'belongs' meant that the model belongs to the parent model you specified.
+    # This macro relates to 'has' macro.
+    # The arguments of 'belongs' are NamedTuple, and 'model', 'as' and 'id' keys are needed.
+    # 'model' key is a type of parent class.
+    # 'as' key is a accessible name for the parent.
+    # 'id' key is a name of the parent's id that you have to define it in attrs of the child as Int32.
+    # ```
+    # class SampleChild < Topaz::Model
+    #   attrs({name: parent_id, type: Int32})
+    #   belongs({model: SampleParent, as: parent, id: parent_id})
+    # end
+    # ```
+    # See [sample code](https://github.com/tbrand/topaz/blob/master/sample/model.cr) for the usages.
     macro belongs(*models)
       {% for m in models %}
         def {{m[:as]}}
@@ -267,7 +308,20 @@ module Topaz
         end
       {% end %}
     end
-    
+
+    # You can define relations for each model by 'belongs' and 'has' macros.
+    # 'has' meant that the model has multiple child models you specified.
+    # This macro relates to 'belongs' macro.
+    # The arguments of 'has' are NamedTuple, and 'model', 'as' and 'id' keys are needed.
+    # 'model' key is a type of parent class.
+    # 'as' key is a accessbiel name for the childs
+    # 'id' key is a name of the parent's id that you have to define it in attrs of the child as Int32.
+    # ```
+    # class SampleParent < Topaz::Model
+    #   has({model: SampleChild, as: childs, id: parent_id})
+    # end
+    # ```
+    # See [sample code](https://github.com/tbrand/topaz/blob/master/sample/model.cr) for the usages.
     macro has(*models)
       {% for m in models %}
         def {{m[:as]}}

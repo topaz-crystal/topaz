@@ -91,7 +91,7 @@ child1.parent.name
 
 ```
 
-For detail, see sample code.
+See [sample code](https://github.com/tbrand/topaz/blob/master/sample/model.cr) for detail.
 
 TODO:
 * Support DATE

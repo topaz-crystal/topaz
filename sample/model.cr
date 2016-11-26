@@ -21,9 +21,6 @@ end
 Topaz::Logger.debug(false)
 Topaz::Logger.show_query(false)
 
-# Show a log
-Topaz::Logger.i("This is a sample code for Topaz, this code print nothing except this message.")
-
 # Setup db
 Topaz.setup("mysql://root@localhost/topaz")
 
@@ -46,7 +43,7 @@ ggg = SampleModel.create("GGG", 25, 14, 18.0, 8)
 SampleModel.select.size
 # => 7
 
-# You can specified id to find a model
+# You can specify id to find a model
 SampleModel.find(1).name
 # => AAA
 
@@ -68,7 +65,7 @@ aaa.update
 aaa.name
 # => AAA+
 
-# You can update columns by using Hash
+# You can update columns by using Hash (NamedTuple actually)
 bbb.update({name: "BBB+"})
 bbb.name
 # => BBB+
