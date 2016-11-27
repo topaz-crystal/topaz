@@ -4,7 +4,7 @@ module Topaz
   # Set log level by self.debug and self.show_query.
   class Logger
 
-    @@debug = true
+    @@debug = false
     @@show_query = false
 
     # Set log level for debug.
