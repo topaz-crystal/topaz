@@ -1,7 +1,7 @@
 # Topaz
 
 Topaz is a simple and useful db wrapper for crystal lang.  
-See [sample code](https://github.com/tbrand/topaz/blob/master/sample/model.cr) for detail.  
+See [sample code](https://github.com/tbrand/topaz/blob/master/sample) for detail.  
 Depends on [crystal-lang/crystal-mysql](https://github.com/crystal-lang/crystal-mysql)  
 
 ## Installation
@@ -60,21 +60,17 @@ SampleModel.where("age = 25").select.size
 # => 2
 
 class SampleParent < Topaz::Model
-  
   attrs(
-    {name: name, type: String}
+    {name: name, type: String},
+    {has: SampleChild, as: childs}
   )
-
-  has({model: SampleChild, as: childs, id: parent_id})
 end
 
 class SampleChild < Topaz::Model
   attrs(
     {name: name, type: String},
-    {name: parent_id, type: Int32}
+    {name: parent_id, type: Int32, belongs: SampleParent, as: parent}
   )
-
-  belongs({model: SampleParent, as: parent, id: parent_id})
 end
 
 p = SampleParent.create("Parent")
@@ -91,7 +87,7 @@ child1.parent.name
 
 ```
 
-See [sample code](https://github.com/tbrand/topaz/blob/master/sample/model.cr) for detail.
+See [sample code](https://github.com/tbrand/topaz/blob/master/sample/association.cr) for detail.
 
 TODO:
 * Support DATE

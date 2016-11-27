@@ -12,14 +12,17 @@ class MockModel < Topaz::Model
 end
 
 class MockParent < Topaz::Model
-  attrs({name: name, type: String})
-  has({model: MockChild, as: childs, id: parent_id})
+  attrs(
+    {name: name, type: String},
+    {has: MockChild, as: childs}
+  )
 end
 
 class MockChild < Topaz::Model
-  attrs({name: name, type: String},
-        {name: parent_id, type: Int32})
-  belongs({model: MockParent, as: parent, id: parent_id})
+  attrs(
+    {name: name, type: String},
+    {name: parent_id, type: Int32, belongs: MockParent, as: parent}
+  )
 end
 
 Spec.before_each do
@@ -85,7 +88,7 @@ describe Topaz do
     MockModel.select.size.should eq(0)
   end
 
-  it "relations" do
+  it "associations" do
     
     p = MockParent.create("parent")
     

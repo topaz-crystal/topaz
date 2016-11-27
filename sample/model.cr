@@ -1,12 +1,23 @@
 require "../src/topaz"
 
-## TODO
-## SQLite support
+################
+# Model Sample #
+################
 
 # This is a sample for Topaz::Model
-# You can define attributes for you model
+# You can define attributes for your model
 class SampleModel < Topaz::Model
   # Attributes
+  # Basically, each attribute needs 'name' and 'type' keys.
+  # 'name' key is a column names which is accessible from code
+  # For example, when you define an attribute {name: ok} for MyModel, you can access it like
+  # ```
+  # m = MyModel("ok_key")
+  # m.ok
+  # => "ok_key"
+  # ```
+  # 'type' key is a column type for defined column
+  # Currently, String, Int32, Float32 and Float64 are supported
   attrs(
     {name: name, type: String},
     {name: age, type: Int32},
@@ -79,49 +90,3 @@ SampleModel.select.size
 SampleModel.delete
 SampleModel.select.size
 # => 0
-
-# You can define relations for each model
-# For now, let me define 2 models
-class SampleParent < Topaz::Model
-  
-  attrs(
-    {name: name, type: String}
-  )
-
-  # This meant that SampleParent has multiple SampleChild
-  # You can access it as childs by select them from parent_id
-  has({model: SampleChild, as: childs, id: parent_id})
-end
-
-class SampleChild < Topaz::Model
-  attrs(
-    {name: name, type: String},
-    {name: parent_id, type: Int32}
-  )
-
-  # This meant that SampleChild belongs to a SampleParent
-  # You can access it as parent by finding by parent_id
-  belongs({model: SampleParent, as: parent, id: parent_id})
-end
-
-# Setup tables
-SampleParent.drop_table
-SampleParent.create_table
-SampleChild.drop_table
-SampleChild.create_table
-
-# Let me create a parent
-p = SampleParent.create("Parent")
-
-# Here we create 3 childs belong to the parent
-child1 = SampleChild.create("Child1", p.id)
-child2 = SampleChild.create("Child2", p.id)
-child3 = SampleChild.create("Child3", p.id)
-
-# Select all childs
-p.childs.size
-# => 3
-
-# Find a parent
-child1.parent.name
-# => Parent

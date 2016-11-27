@@ -27,25 +27,42 @@ module Topaz
     # ```
     # Every model has 'id' as an idetifier, 'id' is automatically defined even if you don't define it in attrs.
     # Futhemore, you should not define it in attrs that may raise compile error.
+    # You can define model associations in attrs.
+    # For childs models, define id of the key of the parent that belongs to.
+    # Specify 'belongs' and 'as' keys to define the association.
+    # The type of the key must be Int32.
+    # ```
+    # attrs( {name: parent_id, type: Int32, belongs: ParentModel, as: parent} )
+    # ```
+    # On the other hand, only thing to do for the parent model is define 'has' and 'as' key for the association.
+    # ```
+    # attrs( {has: ChildModel, as: childs} )
+    # ```
     # See [sample code](https://github.com/tbrand/topaz/blob/master/sample/model.cr) for detail.
     macro attrs(*cols)
 
       def initialize(
             {% for ch in cols %}
-              @{{ch[:name]}} : {{ch[:type]}}|Nil,
+              {% if ch[:name] != nil %}
+                @{{ch[:name]}} : {{ch[:type]}}|Nil,
+              {% end %}
             {% end %}@q = "")
       end
 
       protected def initialize(
             @id : Int32 | Nil,
             {% for ch in cols %}
-              @{{ch[:name]}} : {{ch[:type]}}|Nil,
+              {% if ch[:name] != nil %}
+                @{{ch[:name]}} : {{ch[:type]}}|Nil,
+              {% end %}
             {% end %}@q = "")
       end
 
       protected def initialize
         {% for ch in cols %}
-          @{{ch[:name]}} = nil
+          {% if ch[:name] != nil %}
+            @{{ch[:name]}} = nil
+          {% end %}
         {% end %}
           @q = ""
       end
@@ -135,13 +152,11 @@ module Topaz
 
       def update
         {% if cols.size > 0 %}
-          data = { {% for ch in cols %}{{ch[:name]}}: @{{ch[:name]}},{% end %} }
+          data = { {% for ch in cols %}{% if ch[:name] != nil %}{{ch[:name]}}: @{{ch[:name]}},{% end %}{% end %} }
           update(data)
         {% end %}
       end
 
-      # This function is a trigger of the 'SELECT' query
-      # Every 'SELECT' related methods will not be launched without calling this
       def select
         
         @q = "select * from #{table_name} #{@q}"
@@ -156,7 +171,9 @@ module Topaz
                 typeof(self).new(
                 res.read(Int32), # id
                 {% for ch in cols %}
-                  res.read({{ch[:type]}}|Nil),
+                  {% if ch[:name] != nil %}
+                    res.read({{ch[:type]}}|Nil),
+                  {% end %}
                 {% end %}
               ))
             end
@@ -166,8 +183,8 @@ module Topaz
         set
       end
       
-      def self.create({% for ch in cols %}{{ch[:name]}} : {{ch[:type]}}|Nil,{% end %})
-        model = new({% for ch in cols %}{{ch[:name]}},{% end %})
+      def self.create({% for ch in cols %}{% if ch[:name] != nil %}{{ch[:name]}} : {{ch[:type]}}|Nil,{% end %}{% end %})
+        model = new({% for ch in cols %}{% if ch[:name] != nil %}{{ch[:name]}},{% end %}{% end %})
         res = model.save
         model
       end
@@ -178,11 +195,13 @@ module Topaz
         vals = [] of String
 
         {% for ch in cols %}
-          keys.push("{{ch[:name]}}") unless @{{ch[:name]}}.nil?
-          vals.push("'#{@{{ch[:name]}}}'") unless @{{ch[:name]}}.nil?
+          {% if ch[:name] != nil %}
+            keys.push("{{ch[:name]}}") unless @{{ch[:name]}}.nil?
+            vals.push("'#{@{{ch[:name]}}}'") unless @{{ch[:name]}}.nil?
+          {% end %}
         {% end %}
           
-          _keys = keys.join(", ")
+        _keys = keys.join(", ")
         _vals = vals.join(", ")
 
         @q = "insert into #{table_name}(#{_keys}) values(#{_vals})"
@@ -194,14 +213,14 @@ module Topaz
       def to_a
         [
           ["id", @id],
-          {% for ch in cols %}["{{ch[:name]}}", @{{ch[:name]}}],{% end %}
+          {% for ch in cols %}{% if ch[:name] != nil %}["{{ch[:name]}}", @{{ch[:name]}}],{% end %}{% end %}
         ]
       end
       
       def to_h
         {
           "id" => @id,
-          {% for ch in cols %}"{{ch[:name]}}" => @{{ch[:name]}},{% end %}
+          {% for ch in cols %}{% if ch[:name] != nil %}"{{ch[:name]}}" => @{{ch[:name]}},{% end %}{% end %}
         }
       end
       
@@ -210,8 +229,10 @@ module Topaz
         when "id"
           @id
           {% for ch in cols %}
-          when "{{ch[:name]}}"
-            @{{ch[:name]}}
+            {% if ch[:name] != nil %}
+            when "{{ch[:name]}}"
+              @{{ch[:name]}}
+            {% end %}
           {% end %}
         end
       end
@@ -220,15 +241,17 @@ module Topaz
         {% if cols.size > 0%}
           case key
               {% for ch in cols %}
-              when "{{ch[:name]}}"
-                @{{ch[:name]}} = value
+                {% if ch[:name] != nil %}
+                when "{{ch[:name]}}"
+                  @{{ch[:name]}} = value
+                {% end %}
               {% end %}
           end
         {% end %}
       end
       
       def self.create_table
-        query = "create table if not exists #{table_name}(id int auto_increment,{% for ch in cols %}{{ch[:name]}} #{get_type({{ch[:type]}})}{% if !ch[:primary].nil? && ch[:primary] %} primary key{% end %},{% end %}index(id))"
+        query = "create table if not exists #{table_name}(id int auto_increment,{% for ch in cols %}{% if ch[:name] != nil %}{{ch[:name]}} #{get_type({{ch[:type]}})}{% if !ch[:primary].nil? && ch[:primary] %} primary key{% end %},{% end %}{% end %}index(id))"
         exec query
       end
       
@@ -248,16 +271,31 @@ module Topaz
         new.query(q).exec
       end
 
+      protected def self.downcase
+        class_name = self.to_s.gsub("::", '_')
+        class_name = class_name.gsub(/[A-Z]/){ |a| '_' + a.downcase }
+        class_name = class_name[1..class_name.size-1] if class_name.starts_with?('_')
+        class_name
+      end
+
       def self.table_name
-        self.to_s.gsub("::", '_').downcase
+        downcase
       end
 
       def table_name
-        typeof(self).to_s.gsub("::", '_').downcase
+        typeof(self).downcase
       end
 
-      def self.parent_id
-        self.to_s.gsub("::", '_').downcase + "_id"
+      def self.parent_id(model)
+        {% if cols.size > 0 %}
+          {% for ch in cols %}
+            {% if ch[:belongs] != nil %}
+              if model == {{ch[:belongs]}}
+                "{{ch[:name]}}"
+              end
+            {% end %}
+          {% end %}
+        {% end %}
       end
 
       private def self.get_type(t)
@@ -274,63 +312,26 @@ module Topaz
       end
       
       {% for ch in cols %}
-        def {{ch[:name]}}=(@{{ch[:name]}} : {{ch[:type]}})
-        end
-        
-        def {{ch[:name]}}
-          return @{{ch[:name]}}
-        end
-      {% end %}
-    end
+        {% if ch[:name] != nil %}
+          def {{ch[:name]}}=(@{{ch[:name]}} : {{ch[:type]}})
+          end
 
-    # You can define relations for each model by 'belongs' and 'has' macros.
-    # 'belongs' meant that the model belongs to the parent model you specified.
-    # This macro relates to 'has' macro.
-    # The arguments of 'belongs' are NamedTuple, and 'model', 'as' and 'id' keys are needed.
-    # 'model' key is a type of parent class.
-    # 'as' key is a accessible name for the parent.
-    # 'id' key is a name of the parent's id that you have to define it in attrs of the child as Int32.
-    # ```
-    # class SampleChild < Topaz::Model
-    #   attrs({name: parent_id, type: Int32})
-    #   belongs({model: SampleParent, as: parent, id: parent_id})
-    # end
-    # ```
-    # See [sample code](https://github.com/tbrand/topaz/blob/master/sample/model.cr) for the usages.
-    macro belongs(*models)
-      {% for m in models %}
-        def {{m[:as]}}
-          {% if m[:id] != nil %}
-            {{m[:model]}}.find(@{{m[:id]}})
-          {% else %}
-            {{m[:model]}}.find(typeof(self).parent_id)
-          {% end %}
-        end
-      {% end %}
-    end
+          def {{ch[:name]}}
+            return @{{ch[:name]}}
+          end
 
-    # You can define relations for each model by 'belongs' and 'has' macros.
-    # 'has' meant that the model has multiple child models you specified.
-    # This macro relates to 'belongs' macro.
-    # The arguments of 'has' are NamedTuple, and 'model', 'as' and 'id' keys are needed.
-    # 'model' key is a type of parent class.
-    # 'as' key is a accessbiel name for the childs
-    # 'id' key is a name of the parent's id that you have to define it in attrs of the child as Int32.
-    # ```
-    # class SampleParent < Topaz::Model
-    #   has({model: SampleChild, as: childs, id: parent_id})
-    # end
-    # ```
-    # See [sample code](https://github.com/tbrand/topaz/blob/master/sample/model.cr) for the usages.
-    macro has(*models)
-      {% for m in models %}
-        def {{m[:as]}}
-          {% if m[:id] != nil%}
-            {{m[:model]}}.where("{{m[:id]}} = #{@id}").select
-          {% else %}
-            {{m[:model]}}.where("#{typeof(self).parent_id} = #{@id}").select
+          {% if ch[:belongs] != nil%}
+            def {{ch[:as]}}
+              {{ch[:belongs]}}.find(@{{ch[:name]}})
+            end
           {% end %}
-        end
+        {% end %}
+          {% if ch[:has] != nil %}
+            def {{ch[:as]}}
+              p_id = {{ch[:has]}}.parent_id(typeof(self))
+              {{ch[:has]}}.where("#{p_id} = '#{@id}'").select
+            end
+          {% end %}
       {% end %}
     end
   end
