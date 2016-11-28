@@ -6,7 +6,6 @@ module Topaz
   @@env : String = ""
 
   # Setup db for Topaz.
-  # Currently support only crystal-lgn/crystal-mysql, but will support crystal-sqlite as well.
   def self.setup(@@env : String)
     @@setup = true
   end
@@ -16,6 +15,19 @@ module Topaz
   def self.env
     error("Topaz is not initialized") unless @@setup
     @@env
+  end
+
+  def self.db
+    
+    error("Topaz is not initialized") unless @@setup
+    
+    if @@env.starts_with?("mysql://")
+      :mysql
+    elsif @@env.starts_with?("sqlite3://")
+      :sqlite3
+    else
+      error("Unkown database: #{@@env}")
+    end
   end
   
   private def self.error(msg : String)

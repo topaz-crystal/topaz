@@ -1,43 +1,29 @@
-# This spec needs Topaz::Model
+require "../spec_helper"
 require "../../src/topaz/model"
 
-# This is a test code for Topaz::Model
-# This spec requires actual table named 'topaz' in localhost MySQL.
-
 class MockModel < Topaz::Model
-  attrs(
+  columns(
     {name: name, type: String},
     {name: age, type: Int32},
   )
 end
 
-class MockParent < Topaz::Model
-  attrs(
-    {name: name, type: String},
-    {has: MockChild, as: childs}
-  )
-end
-
-class MockChild < Topaz::Model
-  attrs(
-    {name: name, type: String},
-    {name: parent_id, type: Int32, belongs: MockParent, as: parent}
+class AllTypes < Topaz::Model
+  columns(
+    {name: type_string, type: String},
+    {name: type_integer, type: Int32},
+    {name: type_float, type: Float32},
+    {name: type_double, type: Float64},
   )
 end
 
 Spec.before_each do
   Topaz.setup("mysql://root@localhost/topaz")
-  Topaz::Logger.debug(false)
-  Topaz::Logger.show_query(false)
   MockModel.create_table
-  MockParent.create_table
-  MockChild.create_table
 end
 
 Spec.after_each do
   MockModel.drop_table
-  MockParent.drop_table
-  MockChild.drop_table
 end
 
 describe Topaz do
@@ -46,6 +32,12 @@ describe Topaz do
     m1 = MockModel.new("mock1", 12).save
     m2 = MockModel.create("mock2", 13)
     MockModel.select.size.should eq(2)
+  end
+
+  it "all data types" do
+    AllTypes.create_table
+    AllTypes.create("test", 10, 10.0f32, 20.0)
+    AllTypes.drop_table
   end
 
   it "find models" do
@@ -72,7 +64,6 @@ describe Topaz do
     m2.update({name: "mock_updated2"})
     
     MockModel.find(2).name.should eq("mock_updated2")
-
     MockModel.update({name: "mock_udpated_all"})
     MockModel.where("name = 'mock_udpated_all'").select.size.should eq(10)
   end
@@ -86,17 +77,5 @@ describe Topaz do
     MockModel.select.size.should eq(9)
     MockModel.delete
     MockModel.select.size.should eq(0)
-  end
-
-  it "associations" do
-    
-    p = MockParent.create("parent")
-    
-    c1 = MockChild.create("child1", p.id)
-    c2 = MockChild.create("child2", p.id)
-    c3 = MockChild.create("child3", p.id)
-
-    p.childs.size.should eq(3)
-    c1.parent.name.should eq("parent")
   end
 end

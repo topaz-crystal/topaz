@@ -7,7 +7,7 @@ require "../src/topaz"
 # You can define associations for each model
 # For now, let me define 2 models
 class SampleParent < Topaz::Model
-  attrs(
+  columns(
     {name: name, type: String},
     # This meant that SampleParent has multiple SampleChild
     # You can access it as childs where parent_id of the childs equals to my id
@@ -16,7 +16,7 @@ class SampleParent < Topaz::Model
 end
 
 class SampleChild < Topaz::Model
-  attrs(
+  columns(
     {name: name, type: String},
     # This meant that SampleChild belongs to a SampleParent
     # You can access SampleParent as parent where id of it equals to parent_id

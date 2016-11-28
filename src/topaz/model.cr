@@ -1,46 +1,9 @@
 require "mysql"
+require "sqlite3"
 
 module Topaz
-  # Simple and useful db wrapper for crystal-lang.
-  # Expending this class activate topaz.
-  # ```
-  # class SampleModel < Topaz::Model
-  # end
-  # ```
   class Model
-    # attrs define attributes for Topaz::Model.
-    # Use NamedTuple as arguments.
-    # 'name' key defines a name of the column.
-    # 'type' key defines a type of the column.
-    # Currently, String, Int32, Float32 and Float64 are supported.
-    # 'primary' is also supported for primary key.
-    # ```
-    # attrs(
-    #   {name: name, type: String},
-    #   {name: primary_id, type: Int32, primary: true}
-    # )
-    # ```
-    # attrs generates a constructor for the model.
-    # The constructor doesn't require any keys, the order of the arguments is same as order of attrs.
-    # ```
-    # s = SampleModel.create("MyName", 3)
-    # ```
-    # Every model has 'id' as an idetifier, 'id' is automatically defined even if you don't define it in attrs.
-    # Futhemore, you should not define it in attrs that may raise compile error.
-    # You can define model associations in attrs.
-    # For childs models, define id of the key of the parent that belongs to.
-    # Specify 'belongs' and 'as' keys to define the association.
-    # The type of the key must be Int32.
-    # ```
-    # attrs( {name: parent_id, type: Int32, belongs: ParentModel, as: parent} )
-    # ```
-    # On the other hand, only thing to do for the parent model is define 'has' and 'as' key for the association.
-    # ```
-    # attrs( {has: ChildModel, as: childs} )
-    # ```
-    # See [sample code](https://github.com/tbrand/topaz/blob/master/sample/model.cr) for detail.
-    macro attrs(*cols)
-
+    macro columns(*cols)
       def initialize(
             {% for ch in cols %}
               {% if ch[:name] != nil %}
@@ -167,15 +130,28 @@ module Topaz
         DB.open Topaz.env do |db|
           db.query(@q) do |res|
             res.each do
-              set.push(
-                typeof(self).new(
-                res.read(Int32), # id
-                {% for ch in cols %}
-                  {% if ch[:name] != nil %}
-                    res.read({{ch[:type]}}|Nil),
+              case Topaz.db
+              when :mysql
+                set.push(
+                  typeof(self).new(
+                  res.read(Int32), # id
+                  {% for ch in cols %}
+                    {% if ch[:name] != nil %}
+                      res.read({{ch[:type]}}|Nil),
+                    {% end %}
                   {% end %}
-                {% end %}
-              ))
+                ))
+              when :sqlite3
+                set.push(
+                  typeof(self).new(
+                  res.read(Int64).to_i32, # id
+                  {% for ch in cols %}
+                    {% if ch[:name] != nil %}
+                      res.read({{ch[:type]}}|Nil),
+                    {% end %}
+                  {% end %}
+                ))
+              end
             end
           end
         end
@@ -251,7 +227,16 @@ module Topaz
       end
       
       def self.create_table
-        query = "create table if not exists #{table_name}(id int auto_increment,{% for ch in cols %}{% if ch[:name] != nil %}{{ch[:name]}} #{get_type({{ch[:type]}})}{% if !ch[:primary].nil? && ch[:primary] %} primary key{% end %},{% end %}{% end %}index(id))"
+        
+        case Topaz.db
+        when :mysql
+          query = "create table if not exists #{table_name}(id int auto_increment,{% for ch in cols %}{% if ch[:name] != nil %}{{ch[:name]}} #{get_type({{ch[:type]}})}{% if !ch[:primary].nil? && ch[:primary] %} primary key{% end %},{% end %}{% end %}index(id))"
+        when :sqlite3
+          query = "create table if not exists #{table_name}(id integer primary key,{% for ch, idx in cols %}{% if ch[:name] != nil %}{{ch[:name]}} #{get_type({{ch[:type]}})}{% if !ch[:primary].nil? && ch[:primary] %} primary key{% end %}{% if idx != cols.size-1 %},{% end %}{% end %}{% end %})"
+        else
+          query = ""
+        end
+        
         exec query
       end
       
@@ -303,7 +288,11 @@ module Topaz
         when "String"
           "text"
         when "Int32"
-          "int"
+          return "int" if Topaz.db == :mysql
+          return "integer" if Topaz.db == :sqlite3
+        when "Int64"
+          return "int" if Topaz.db == :mysql
+          return "integer" if Topaz.db == :sqlite3
         when "Float32"
           "float"
         when "Float64"

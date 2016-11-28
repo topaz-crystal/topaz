@@ -5,12 +5,11 @@ require "../src/topaz"
 ################
 
 # This is a sample for Topaz::Model
-# You can define attributes for your model
+# You can define columns for your model
 class SampleModel < Topaz::Model
-  # Attributes
-  # Basically, each attribute needs 'name' and 'type' keys.
+  # Basically, each column needs 'name' and 'type' keys.
   # 'name' key is a column names which is accessible from code
-  # For example, when you define an attribute {name: ok} for MyModel, you can access it like
+  # For example, when you define an column {name: ok} for MyModel, you can access it like
   # ```
   # m = MyModel("ok_key")
   # m.ok
@@ -18,7 +17,7 @@ class SampleModel < Topaz::Model
   # ```
   # 'type' key is a column type for defined column
   # Currently, String, Int32, Float32 and Float64 are supported
-  attrs(
+  columns(
     {name: name, type: String},
     {name: age, type: Int32},
     {name: score, type: Int32},

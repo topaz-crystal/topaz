@@ -24,7 +24,7 @@ Topaz.setup("mysql://root@localhost/topaz")
 **2. Define models**
 ```crystal
 class SampleModel < Topaz::Model
-  attrs(
+  columns(
     {name: name, type: String}
     ...
   )
@@ -38,7 +38,7 @@ See [sample code](https://github.com/tbrand/topaz/blob/master/sample/model.cr) f
 require "topaz"
 
 class SampleModel < Topaz::Model
-  attrs(
+  columns(
     {name: name, type: String},
     {name: age, type: Int32},
     {name: score, type: Int32},
@@ -60,14 +60,14 @@ SampleModel.where("age = 25").select.size
 # => 2
 
 class SampleParent < Topaz::Model
-  attrs(
+  columns(
     {name: name, type: String},
     {has: SampleChild, as: childs}
   )
 end
 
 class SampleChild < Topaz::Model
-  attrs(
+  columns(
     {name: name, type: String},
     {name: parent_id, type: Int32, belongs: SampleParent, as: parent}
   )
@@ -87,7 +87,14 @@ child1.parent.name
 
 ```
 
-See [sample code](https://github.com/tbrand/topaz/blob/master/sample/association.cr) for detail.
+See [sample code](https://github.com/tbrand/topaz/blob/master/sample/association.cr) for detail.  
+**Supported data types.**
+```
+[MySQL]
+String, Int32, Float64, Float32
+[SQLite3]
+String, Int64, Float64, Float32
+```
 
 TODO:
 * Support DATE
