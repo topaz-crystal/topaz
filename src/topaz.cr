@@ -1,37 +1,45 @@
 require "./topaz/*"
+require "singleton"
 
 module Topaz
   
-  @@setup = false
-  @@env : String = ""
-
-  # Setup db for Topaz.
-  def self.setup(@@env : String)
-    @@setup = true
+  class DB < SingleTon
+    st_fields(
+      {st_type: :property, name: info, type: String, df: ""},
+      {st_type: :property, name: setup, type: Bool, df: false}
+    )
   end
 
-  # Get db information.
-  # Exit with an error message if setup is not completed.
-  def self.env
-    error("Topaz is not initialized") unless @@setup
-    @@env
+  def self.setup(info)
+    db = DB.get_instance
+    Topaz::Logger.e("Topaz is already setup") if db.setup
+    db.info = info
+    db.setup = true
+  end
+
+  def self.clean
+    db = DB.get_instance
+    db.info = ""
+    db.setup = false
+  end
+
+  def self.db_type
+
+    db = DB.get_instance
+    
+    Topaz::Logger.e("Topaz is not initialized") unless db.setup
+    
+    if db.info.starts_with?("mysql://")
+      :mysql
+    elsif db.info.starts_with?("sqlite3://")
+      :sqlite3
+    else
+      Topaz::Logger.e("Unkown database: #{db.info}")
+    end
   end
 
   def self.db
-    
-    error("Topaz is not initialized") unless @@setup
-    
-    if @@env.starts_with?("mysql://")
-      :mysql
-    elsif @@env.starts_with?("sqlite3://")
-      :sqlite3
-    else
-      error("Unkown database: #{@@env}")
-    end
-  end
-  
-  private def self.error(msg : String)
-    puts "Error: #{msg}"
-    exit 1
+    db = DB.get_instance
+    db.info
   end
 end

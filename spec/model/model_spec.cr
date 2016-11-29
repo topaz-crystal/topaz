@@ -1,30 +1,5 @@
 require "../spec_helper"
-require "../../src/topaz/model"
-
-class MockModel < Topaz::Model
-  columns(
-    {name: name, type: String},
-    {name: age, type: Int32},
-  )
-end
-
-class AllTypes < Topaz::Model
-  columns(
-    {name: type_string, type: String},
-    {name: type_integer, type: Int32},
-    {name: type_float, type: Float32},
-    {name: type_double, type: Float64},
-  )
-end
-
-Spec.before_each do
-  Topaz.setup("mysql://root@localhost/topaz")
-  MockModel.create_table
-end
-
-Spec.after_each do
-  MockModel.drop_table
-end
+require "./models"
 
 describe Topaz do
 
@@ -35,9 +10,8 @@ describe Topaz do
   end
 
   it "all data types" do
-    AllTypes.create_table
     AllTypes.create("test", 10, 10.0f32, 20.0)
-    AllTypes.drop_table
+    AllTypes.select.size.should eq(1)
   end
 
   it "find models" do

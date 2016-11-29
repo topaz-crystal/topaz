@@ -3,28 +3,55 @@ require "sqlite3"
 
 module Topaz
   class Model
+
     macro columns(*cols)
+
+      {% data_exists = false %}
+      {% for c in cols %}
+        {% if c[:name] != nil %}
+          {% data_exists = true %}
+        {% end %}
+      {% end %}
+
+        {% for c in cols %}
+          {% if c[:name] == nil && c[:type] == nil %}
+            {% if c[:has] == nil && c[:as] == nil %}
+              raise ":has and :as are required or missing both of :name and :type"
+            {% end %}
+          {% elsif c[:name] == nil && c[:type] != nil %}
+          raise ":name is missing"
+          {% elsif c[:name] != nil && c[:type] == nil %}
+          raise ":type is missing"
+          {% else %}
+          {% if c[:belongs] != nil && c[:as] == nil %}
+            raise ":as is missing"
+          {% elsif c[:belongs] == nil && c[:as] != nil%}
+          raise ":belongs is missing"
+          {% end %}
+          {% end %}
+        {% end%}
+        
       def initialize(
-            {% for ch in cols %}
-              {% if ch[:name] != nil %}
-                @{{ch[:name]}} : {{ch[:type]}}|Nil,
+            {% for c in cols %}
+              {% if c[:name] != nil %}
+                @{{c[:name]}} : {{c[:type]}}|Nil,
               {% end %}
             {% end %}@q = "")
       end
-
+      
       protected def initialize(
             @id : Int32 | Nil,
-            {% for ch in cols %}
-              {% if ch[:name] != nil %}
-                @{{ch[:name]}} : {{ch[:type]}}|Nil,
+            {% for c in cols %}
+              {% if c[:name] != nil %}
+                @{{c[:name]}} : {{c[:type]}}|Nil,
               {% end %}
             {% end %}@q = "")
       end
 
       protected def initialize
-        {% for ch in cols %}
-          {% if ch[:name] != nil %}
-            @{{ch[:name]}} = nil
+        {% for c in cols %}
+          {% if c[:name] != nil %}
+            @{{c[:name]}} = nil
           {% end %}
         {% end %}
           @q = ""
@@ -100,22 +127,22 @@ module Topaz
 
         updated = ""
         
-        data.each_with_index do |k, v, idx|
+        data.each_with_index do |k, v, i|
           unless v.nil?
             updated += "#{k} = \'#{v}\'"
-            updated += ", " if idx != data.size-1
+            updated += ", " if i != data.size-1
             set_value_of(k.to_s, v) unless @id.nil?
           end
         end
-        
+
         @q = "update #{table_name} set #{updated} #{@q}"
         exec
         @q = ""
       end
 
       def update
-        {% if cols.size > 0 %}
-          data = { {% for ch in cols %}{% if ch[:name] != nil %}{{ch[:name]}}: @{{ch[:name]}},{% end %}{% end %} }
+        {% if cols.size > 0 && data_exists %}
+          data = { {% for c in cols %}{% if c[:name] != nil %}{{c[:name]}}: @{{c[:name]}},{% end %}{% end %} }
           update(data)
         {% end %}
       end
@@ -127,17 +154,17 @@ module Topaz
         
         set = Array(typeof(self)).new
         
-        DB.open Topaz.env do |db|
+        DB.open Topaz.db do |db|
           db.query(@q) do |res|
             res.each do
-              case Topaz.db
+              case Topaz.db_type
               when :mysql
                 set.push(
                   typeof(self).new(
                   res.read(Int32), # id
-                  {% for ch in cols %}
-                    {% if ch[:name] != nil %}
-                      res.read({{ch[:type]}}|Nil),
+                  {% for c in cols %}
+                    {% if c[:name] != nil %}
+                      res.read({{c[:type]}}|Nil),
                     {% end %}
                   {% end %}
                 ))
@@ -145,9 +172,9 @@ module Topaz
                 set.push(
                   typeof(self).new(
                   res.read(Int64).to_i32, # id
-                  {% for ch in cols %}
-                    {% if ch[:name] != nil %}
-                      res.read({{ch[:type]}}|Nil),
+                  {% for c in cols %}
+                    {% if c[:name] != nil %}
+                      res.read({{c[:type]}}|Nil),
                     {% end %}
                   {% end %}
                 ))
@@ -159,8 +186,8 @@ module Topaz
         set
       end
       
-      def self.create({% for ch in cols %}{% if ch[:name] != nil %}{{ch[:name]}} : {{ch[:type]}}|Nil,{% end %}{% end %})
-        model = new({% for ch in cols %}{% if ch[:name] != nil %}{{ch[:name]}},{% end %}{% end %})
+      def self.create({% for c in cols %}{% if c[:name] != nil %}{{c[:name]}} : {{c[:type]}}|Nil,{% end %}{% end %})
+        model = new({% for c in cols %}{% if c[:name] != nil %}{{c[:name]}},{% end %}{% end %})
         res = model.save
         model
       end
@@ -170,10 +197,10 @@ module Topaz
         keys = [] of String
         vals = [] of String
 
-        {% for ch in cols %}
-          {% if ch[:name] != nil %}
-            keys.push("{{ch[:name]}}") unless @{{ch[:name]}}.nil?
-            vals.push("'#{@{{ch[:name]}}}'") unless @{{ch[:name]}}.nil?
+        {% for c in cols %}
+          {% if c[:name] != nil %}
+            keys.push("{{c[:name]}}") unless @{{c[:name]}}.nil?
+            vals.push("'#{@{{c[:name]}}}'") unless @{{c[:name]}}.nil?
           {% end %}
         {% end %}
           
@@ -189,14 +216,14 @@ module Topaz
       def to_a
         [
           ["id", @id],
-          {% for ch in cols %}{% if ch[:name] != nil %}["{{ch[:name]}}", @{{ch[:name]}}],{% end %}{% end %}
+          {% for c in cols %}{% if c[:name] != nil %}["{{c[:name]}}", @{{c[:name]}}],{% end %}{% end %}
         ]
       end
       
       def to_h
         {
           "id" => @id,
-          {% for ch in cols %}{% if ch[:name] != nil %}"{{ch[:name]}}" => @{{ch[:name]}},{% end %}{% end %}
+          {% for c in cols %}{% if c[:name] != nil %}"{{c[:name]}}" => @{{c[:name]}},{% end %}{% end %}
         }
       end
       
@@ -204,22 +231,23 @@ module Topaz
         case key
         when "id"
           @id
-          {% for ch in cols %}
-            {% if ch[:name] != nil %}
-            when "{{ch[:name]}}"
-              @{{ch[:name]}}
+          {% for c in cols %}
+            {% if c[:name] != nil %}
+            when "{{c[:name]}}"
+              @{{c[:name]}}
             {% end %}
           {% end %}
         end
       end
       
       def set_value_of(key : String, value : DB::Any)
-        {% if cols.size > 0%}
+        
+        {% if cols.size > 0 && data_exists %}
           case key
-              {% for ch in cols %}
-                {% if ch[:name] != nil %}
-                when "{{ch[:name]}}"
-                  @{{ch[:name]}} = value
+              {% for c in cols %}
+                {% if c[:name] != nil %}
+                when "{{c[:name]}}"
+                  @{{c[:name]}} = value
                 {% end %}
               {% end %}
           end
@@ -228,11 +256,11 @@ module Topaz
       
       def self.create_table
         
-        case Topaz.db
+        case Topaz.db_type
         when :mysql
-          query = "create table if not exists #{table_name}(id int auto_increment,{% for ch in cols %}{% if ch[:name] != nil %}{{ch[:name]}} #{get_type({{ch[:type]}})}{% if !ch[:primary].nil? && ch[:primary] %} primary key{% end %},{% end %}{% end %}index(id))"
+          query = "create table if not exists #{table_name}(id int auto_increment,{% for c in cols %}{% if c[:name] != nil %}{{c[:name]}} #{get_type({{c[:type]}})}{% if !c[:primary].nil? && c[:primary] %} primary key{% end %},{% end %}{% end %}index(id))"
         when :sqlite3
-          query = "create table if not exists #{table_name}(id integer primary key,{% for ch, idx in cols %}{% if ch[:name] != nil %}{{ch[:name]}} #{get_type({{ch[:type]}})}{% if !ch[:primary].nil? && ch[:primary] %} primary key{% end %}{% if idx != cols.size-1 %},{% end %}{% end %}{% end %})"
+          query = "create table if not exists #{table_name}(id integer primary key,{% for c, i in cols %}{% if c[:name] != nil %}{{c[:name]}} #{get_type({{c[:type]}})}{% if !c[:primary].nil? && c[:primary] %} primary key{% end %}{% if i != cols.size-1 %},{% end %}{% end %}{% end %})"
         else
           query = ""
         end
@@ -247,7 +275,7 @@ module Topaz
 
       def exec
         Topaz::Logger.q @q
-        DB.open Topaz.env do |db|
+        DB.open Topaz.db do |db|
           return db.exec @q
         end
       end
@@ -272,11 +300,11 @@ module Topaz
       end
 
       def self.parent_id(model)
-        {% if cols.size > 0 %}
-          {% for ch in cols %}
-            {% if ch[:belongs] != nil %}
-              if model == {{ch[:belongs]}}
-                "{{ch[:name]}}"
+        {% if cols.size > 0 && data_exists %}
+          {% for c in cols %}
+            {% if c[:belongs] != nil %}
+              if model == {{c[:belongs]}}
+                "{{c[:name]}}"
               end
             {% end %}
           {% end %}
@@ -288,11 +316,11 @@ module Topaz
         when "String"
           "text"
         when "Int32"
-          return "int" if Topaz.db == :mysql
-          return "integer" if Topaz.db == :sqlite3
+          return "int" if Topaz.db_type == :mysql
+          return "integer" if Topaz.db_type == :sqlite3
         when "Int64"
-          return "int" if Topaz.db == :mysql
-          return "integer" if Topaz.db == :sqlite3
+          return "int" if Topaz.db_type == :mysql
+          return "integer" if Topaz.db_type == :sqlite3
         when "Float32"
           "float"
         when "Float64"
@@ -300,25 +328,25 @@ module Topaz
         end
       end
       
-      {% for ch in cols %}
-        {% if ch[:name] != nil %}
-          def {{ch[:name]}}=(@{{ch[:name]}} : {{ch[:type]}})
+      {% for c in cols %}
+        {% if c[:name] != nil %}
+          def {{c[:name]}}=(@{{c[:name]}} : {{c[:type]}})
           end
 
-          def {{ch[:name]}}
-            return @{{ch[:name]}}
+          def {{c[:name]}}
+            return @{{c[:name]}}
           end
 
-          {% if ch[:belongs] != nil%}
-            def {{ch[:as]}}
-              {{ch[:belongs]}}.find(@{{ch[:name]}})
+          {% if c[:belongs] != nil%}
+            def {{c[:as]}}
+              {{c[:belongs]}}.find(@{{c[:name]}})
             end
           {% end %}
         {% end %}
-          {% if ch[:has] != nil %}
-            def {{ch[:as]}}
-              p_id = {{ch[:has]}}.parent_id(typeof(self))
-              {{ch[:has]}}.where("#{p_id} = '#{@id}'").select
+          {% if c[:has] != nil %}
+            def {{c[:as]}}
+              p_id = {{c[:has]}}.parent_id(typeof(self))
+              {{c[:has]}}.where("#{p_id} = '#{@id}'").select
             end
           {% end %}
       {% end %}
