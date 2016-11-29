@@ -157,7 +157,7 @@ module Topaz
         DB.open Topaz.db do |db|
           db.query(@q) do |res|
             res.each do
-              case Topaz.db_type
+              case Topaz::DB.type
               when :mysql
                 set.push(
                   typeof(self).new(
@@ -256,7 +256,7 @@ module Topaz
       
       def self.create_table
         
-        case Topaz.db_type
+        case Topaz::DB.type
         when :mysql
           query = "create table if not exists #{table_name}(id int auto_increment,{% for c in cols %}{% if c[:name] != nil %}{{c[:name]}} #{get_type({{c[:type]}})}{% if !c[:primary].nil? && c[:primary] %} primary key{% end %},{% end %}{% end %}index(id))"
         when :sqlite3
@@ -316,11 +316,11 @@ module Topaz
         when "String"
           "text"
         when "Int32"
-          return "int" if Topaz.db_type == :mysql
-          return "integer" if Topaz.db_type == :sqlite3
+          return "int" if Topaz::DB.type == :mysql
+          return "integer" if Topaz::DB.type == :sqlite3
         when "Int64"
-          return "int" if Topaz.db_type == :mysql
-          return "integer" if Topaz.db_type == :sqlite3
+          return "int" if Topaz::DB.type == :mysql
+          return "integer" if Topaz::DB.type == :sqlite3
         when "Float32"
           "float"
         when "Float64"

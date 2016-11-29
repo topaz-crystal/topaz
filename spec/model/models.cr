@@ -29,7 +29,7 @@ class MockChild < Topaz::Model
 end
 
 Spec.before_each do
-  Topaz.setup("mysql://root@localhost/topaz")
+  Topaz::DB.setup("mysql://root@localhost/topaz")
   MockModel.create_table
   MockParent.create_table
   MockChild.create_table
@@ -41,5 +41,5 @@ Spec.after_each do
   MockParent.drop_table
   MockChild.drop_table
   AllTypes.drop_table
-  Topaz.clean
+  Topaz::DB.clean
 end
