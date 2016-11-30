@@ -32,7 +32,7 @@ Topaz::Logger.debug(false)
 Topaz::Logger.show_query(false)
 
 # Setup db
-Topaz.setup("mysql://root@localhost/topaz")
+Topaz::Db.setup("mysql://root@localhost/topaz")
 
 # Setup tables
 # You can create or drop a table as follows

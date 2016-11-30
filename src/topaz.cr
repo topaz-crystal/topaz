@@ -4,7 +4,7 @@ require "mysql"
 require "sqlite3"
 
 module Topaz
-  class DB < SingleTon
+  class Db < SingleTon
     
     st_fields(
       {st_type: :property, name: info,  type: String, df: ""},
@@ -26,7 +26,7 @@ module Topaz
 
     def self.type
       
-      db = DB.get_instance
+      db = Db.get_instance
       
       Topaz::Logger.e("Topaz is not initialized") unless db.setup
       
@@ -38,10 +38,16 @@ module Topaz
         Topaz::Logger.e("Unkown database: #{db.info}")
       end
     end
+
+    def self.open(&block)
+      topaz_db = Db.get_instance
+      real_db  = DB.open topaz_db.info
+      yield real_db
+    end
   end
 
   def self.db
-    db = DB.get_instance
+    db = Db.get_instance
     db.info
   end
 end
