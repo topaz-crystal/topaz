@@ -4,35 +4,28 @@ require "../src/topaz"
 # Model Sample #
 ################
 
-# This is a sample for Topaz::Model
-# You can define columns for your model
+# This is a sample for Topaz::Model using SQLite3 as db
+# You can define columns for your model as follows
 class SampleModel < Topaz::Model
   # Basically, each column needs 'name' and 'type' keys.
-  # 'name' key is a column names which is accessible from code
-  # For example, when you define an column {name: ok} for MyModel, you can access it like
-  # ```
-  # m = MyModel("ok_key")
-  # m.ok
-  # => "ok_key"
-  # ```
-  # 'type' key is a column type for defined column
-  # Currently, String, Int32, Float32 and Float64 are supported
+  # 'name' key is a column name which is accessible from code
+  # 'type' key is a column type for defined column.
+  # Currently, String, Int32, Float32 and Float64 are supported for MySQL
+  # and String, Int64 and Float64 are supported for SQLite3
+  # In this sample, we use SQLite3 as database.
   columns(
     {name: name, type: String},
-    {name: age, type: Int32},
-    {name: score, type: Int32},
-    {name: time, type: Float64},
-    {name: uid, type: Int32, primary: true}, # uid is primary
+    {name: age, type: Int64},
+    {name: score, type: Float64},
   )
 end
 
 # Setup logger level
-# For now, disable debug level logs and queries
-Topaz::Logger.debug(false)
-Topaz::Logger.show_query(false)
+Topaz::Log.debug_mode(false)
+Topaz::Log.show_query(true)
 
 # Setup db
-Topaz::Db.setup("mysql://root@localhost/topaz")
+Topaz::Db.setup("sqlite3://./db/sample.db")
 
 # Setup tables
 # You can create or drop a table as follows
@@ -41,13 +34,13 @@ SampleModel.drop_table
 SampleModel.create_table
 
 # Here, we create 7 models.
-aaa = SampleModel.create("AAA", 25, 10, 20.0, 2)
-bbb = SampleModel.create("BBB", 26, 12, 32.0, 3)
-ccc = SampleModel.create("CCC", 25, 18, 40.0, 4)
-ddd = SampleModel.create("DDD", 27, 11, 41.0, 5)
-eee = SampleModel.create("EEE", 24, 11, 42.0, 6)
-fff = SampleModel.create("FFF", 22, 15, 45.0, 7)
-ggg = SampleModel.create("GGG", 25, 14, 18.0, 8)
+aaa = SampleModel.create("AAA", 25.to_i64, 20.0)
+bbb = SampleModel.create("BBB", 26.to_i64, 32.0)
+ccc = SampleModel.create("CCC", 25.to_i64, 40.0)
+ddd = SampleModel.create("DDD", 27.to_i64, 41.0)
+eee = SampleModel.create("EEE", 24.to_i64, 42.0)
+fff = SampleModel.create("FFF", 22.to_i64, 45.0)
+ggg = SampleModel.create("GGG", 25.to_i64, 18.0)
 
 # Select all models we created
 SampleModel.select.size
@@ -66,8 +59,8 @@ SampleModel.where("name = 'AAA'").select.size
 # => 1
 
 # Select samples ordered by 'score' and set offset = 1 and limit = 3
-SampleModel.order("score").range(1, 3).select.first.time
-# => 41.0
+SampleModel.order("score").range(1, 3).select.first.name
+# => AAA
 
 # Update name from AAA to AAA+
 aaa.name = "AAA+"

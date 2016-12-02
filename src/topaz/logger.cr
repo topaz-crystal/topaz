@@ -1,38 +1,78 @@
+require "logger"
+require "singleton"
 
 module Topaz
-  # A logger for Topaz.
-  # Set log level by self.debug and self.show_query.
-  class Logger
+  class Log < SingleTon
+    st_fields(
+      {st_type: :property, name: debug_mode, type: Bool, df: false},
+      {st_type: :property, name: show_query, type: Bool, df: false},
+      {st_type: :property, name: log, type: Logger, df: Logger.new(STDOUT)}
+    )
 
-    @@debug = false
-    @@show_query = false
-
-    # Set log level for debug.
-    # If you set it 'true', print out all most all logs.
-    def self.debug(set : Bool)
-      @@debug = set
+    def self.debug_mode(set : Bool)
+      log = Topaz::Log.get_instance
+      log.debug_mode = set
     end
 
-    # Set log level for queries.
-    # If you set it 'true', print out all queries that Topaz throws.
     def self.show_query(set : Bool)
-      @@show_query = set
-    end
-    
-    protected def self.v(msg : String)
-      print "\e[36m[Topaz] #{msg}\e[m\n" if @@debug
+      log = Topaz::Log.get_instance
+      log.show_query = set
     end
 
-    protected def self.i(msg : String)
-      print "\e[36m[Topaz info] #{msg}\e[m\n"
-    end
-    
-    protected def self.e(msg : String)
-      print "\e[31m[Topaz -- Error ] #{msg}\e[m\n"
+    def self.d(msg : String)
+      log = Topaz::Log.get_instance
+      log.d(msg)
     end
 
-    protected def self.q(msg : String)
-      print "\e[33m[Topaz query] #{msg}\e[m\n" if @@show_query || @@debug
+    def d(msg : String)
+      @log.level = Logger::Severity::DEBUG if @debug_mode && @log.level != Logger::Severity::DEBUG
+      @log.debug("\e[36m[Topaz] #{msg}\e[m") if @debug_mode
+    end
+
+    def self.i(msg : String)
+      log = Topaz::Log.get_instance
+      log.i(msg)
+    end
+
+    def i(msg : String)
+      @log.info("\e[36m[Topaz] #{msg}\e[m")
+    end
+
+    def self.e(msg : String)
+      log = Topaz::Log.get_instance
+      log.e(msg)
+    end
+
+    def e(msg : String)
+      @log.error("\e[31m[Topaz -- Error ] #{msg}\e[m")
+    end
+
+    def self.f(msg : String)
+      log = Topaz::Log.get_instance
+      log.f(msg)
+    end
+
+    def f(msg : String)
+      @log.fatal("\e[31m[Topaz -- Error(Fatal) ] #{msg}\e[m")
+    end
+
+    def self.w(msg : String)
+      log = Topaz::Log.get_instance
+      log.w(msg)
+    end
+
+    def w(msg : String)
+      @log.warn("\e[33m[Topaz -- Warning] #{msg}\e[m") if @debug_mode
+    end
+
+    def self.q(msg : String)
+      log = Topaz::Log.get_instance
+      log.q(msg)
+    end
+
+    def q(msg : String)
+      @log.level = Logger::Severity::DEBUG if @show_query && @log.level != Logger::Severity::DEBUG
+      @log.debug("\e[33m[Topaz query] #{msg}\e[m") if @show_query
     end
   end
 end

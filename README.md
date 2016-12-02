@@ -18,7 +18,8 @@ dependencies:
 
 **1. Setup DB**
 ```crystal
-Topaz::Db.setup("mysql://root@localhost/topaz")
+Topaz::Db.setup("mysql://root@localhost/topaz") # For MySQL
+Topaz::Db.setup("sqlite3://./db/data.db") # For SQLite3
 ```
 
 **2. Define models**
@@ -93,12 +94,11 @@ See [sample code](https://github.com/tbrand/topaz/blob/master/sample/association
 [MySQL]
 String, Int32, Float64, Float32
 [SQLite3]
-String, Int64, Float64, Float32
+String, Int64, Float64
 ```
 
 TODO:
 * Support DATE
-* Support SQLite
 * Support migration.
 
 ## Contributing

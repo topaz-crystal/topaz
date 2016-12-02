@@ -1,12 +1,5 @@
 require "../spec_helper"
 
-class MockModel < Topaz::Model
-  columns(
-    {name: name, type: String},
-    {name: age, type: Int32},
-  )
-end
-
 class AllTypes < Topaz::Model
   columns(
     {name: type_string, type: String},
@@ -16,30 +9,48 @@ class AllTypes < Topaz::Model
   )
 end
 
+class MockModel < Topaz::Model
+  columns(
+    {name: name, type: String},
+    {name: age, type: Int32},
+  )
+end
+
 class MockParent < Topaz::Model
   columns(
     {has: MockChild, as: childs}
   )
 end
- 
+
 class MockChild < Topaz::Model
   columns(
     {name: parent_id, type: Int32, belongs: MockParent, as: parent}
   )
 end
 
-Spec.before_each do
-  Topaz::Db.setup("mysql://root@localhost/topaz")
-  MockModel.create_table
-  MockParent.create_table
-  MockChild.create_table
-  AllTypes.create_table
+class AllTypesSqlite3 < Topaz::Model
+  columns(
+    {name: type_string, type: String},
+    {name: type_integer, type: Int64},
+    {name: type_double, type: Float64},
+  )
 end
 
-Spec.after_each do
-  MockModel.drop_table
-  MockParent.drop_table
-  MockChild.drop_table
-  AllTypes.drop_table
-  Topaz::Db.clean
+class MockModelSqlite3 < Topaz::Model
+  columns(
+    {name: name, type: String},
+    {name: age, type: Int64},
+  )
+end
+
+class MockParentSqlite3 < Topaz::Model
+  columns(
+    {has: MockChildSqlite3, as: childs}
+  )
+end
+
+class MockChildSqlite3 < Topaz::Model
+  columns(
+    {name: parent_id, type: Int64, belongs: MockParentSqlite3, as: parent}
+  )
 end
