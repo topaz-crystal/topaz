@@ -50,6 +50,7 @@ describe Topaz do
       m2 = MockModel.find(2)
       m2.update({name: "mock_updated2"})
       MockModel.find(2).name.should eq("mock_updated2")
+      
       MockModel.update({name: "mock_udpated_all"})
       MockModel.where("name = 'mock_udpated_all'").select.size.should eq(10)
     end

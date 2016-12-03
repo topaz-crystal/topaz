@@ -112,11 +112,10 @@ module Topaz
       end
 
       def update(data)
-
         @q = "where id = #{@id}" unless @id == -1
-
+        
         updated = ""
-
+        
         data.each_with_index do |k, v, i|
           unless v.nil?
             updated += "#{k} = \'#{v}\'"
@@ -124,18 +123,37 @@ module Topaz
             set_value_of(k.to_s, v) unless @id == -1
           end
         end
-
+         
         @q = "update #{table_name} set #{updated} #{@q}"
         exec
         @q = ""
       end
-
+       
       def update
         {% if cols.size > 0 && data_exists %}
           data = { {% for c in cols %}{% if c[:name] != nil %}{{c[:name].id}}: @{{c[:name].id}},{% end %}{% end %} }
           update(data)
         {% end %}
       end
+
+      #def update(data)
+      #  update
+      #end
+      # 
+      #def update
+      #  updated = ""
+      #  {% for c, i in cols %}
+      #    updated += "{{c[:name].id}} = \'#{ @{{c[:name].id}} }\'"
+      #    {% if i != cols.size-1 %}
+      #      updated += ", "
+      #    {% end %}
+      #  {% end %}
+      # 
+      #    puts updated
+      #  @q = "update #{table_name} set #{updated} #{@q}"
+      #  exec
+      #  @q = ""
+      #end
 
       def select
 
@@ -219,33 +237,6 @@ module Topaz
         }
       end
 
-      def value_of(key : String)
-        case key
-        when "id"
-          @id
-          {% for c in cols %}
-            {% if c[:name] != nil %}
-            when "{{c[:name].id}}"
-              @{{c[:name].id}}
-            {% end %}
-          {% end %}
-        end
-      end
-
-      def set_value_of(key : String, value : DB::Any)
-
-        {% if cols.size > 0 && data_exists %}
-          case key
-              {% for c in cols %}
-                {% if c[:name] != nil %}
-                when "{{c[:name].id}}"
-                  @{{c[:name].id}} = value
-                {% end %}
-              {% end %}
-          end
-        {% end %}
-      end
-
       def self.create_table
 
         case Topaz::Db.type
@@ -308,13 +299,27 @@ module Topaz
         end
       end
 
+      def set_value_of(key : String, value : DB::Any)
+        
+        {% if cols.size > 0 && data_exists %}
+          case key
+              {% for c in cols %}
+                {% if c[:name] != nil %}
+                when "{{c[:name].id}}"
+                  @{{c[:name].id}} = value
+                {% end %}
+              {% end %}
+          end
+        {% end %}
+      end
+
       {% for c in cols %}
         {% if c[:name] != nil %}
           def {{c[:name].id}}=(@{{c[:name].id}} : {{c[:type].id}})
           end
-
-          def {{c[:name].id}}
-            return @{{c[:name].id}}
+          
+          def {{c[:name].id}} : {{c[:type].id}}
+            return @{{c[:name].id}}.as({{c[:type].id}})
           end
         {% end %}
       {% end %}
