@@ -4,8 +4,9 @@
 
 Topaz is a simple and useful db wrapper for crystal lang.
 Topaz is inspired by ActiveRecord design pattern, but not fully implemented.
-See [sample code](https://github.com/tbrand/topaz/blob/master/sample) for detail.  
-Depends on [crystal-lang/crystal-mysql](https://github.com/crystal-lang/crystal-mysql) and [crystal-lang/crystal-sqlite3](https://github.com/crystal-lang/crystal-sqlite3)  
+See [sample code](https://github.com/tbrand/topaz/blob/master/sample) for detail.
+[Here](https://github.com/tbrand/topaz-kemal-sample) is another sample that shows how Topaz works in Kemal.  
+Depends on [crystal-lang/crystal-mysql](https://github.com/crystal-lang/crystal-mysql) and [crystal-lang/crystal-sqlite3](https://github.com/crystal-lang/crystal-sqlite3)
 
 ## Installation
 
