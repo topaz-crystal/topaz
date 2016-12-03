@@ -40,7 +40,7 @@ SampleModel.drop_table
 ```
 
 **3. Create, find, update and delete models**
-```
+```crystal
 s = SampleModel.create("Sample Name")
 
 SampleModel.find(1).name
