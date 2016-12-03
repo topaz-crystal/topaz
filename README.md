@@ -1,3 +1,5 @@
+![](https://cloud.githubusercontent.com/assets/3483230/20856901/fad1885e-b95f-11e6-848d-c46e33d8290e.png =100x100)
+
 # Topaz
 
 Topaz is a simple and useful db wrapper for crystal lang.
