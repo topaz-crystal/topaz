@@ -66,7 +66,7 @@ describe Topaz do
     end
 
     it "[MySQL] Associations" do
-      p = MockParent.create
+      p = MockParent.create("test")
       c1 = MockChild.create(p.id)
       c2 = MockChild.create(p.id)
       c3 = MockChild.create(p.id)

@@ -59,7 +59,7 @@ describe Topaz do
       MockModelSqlite3.select.size.should eq(0)
     end
     it "[SQLite3] Associations" do
-      p = MockParentSqlite3.create
+      p = MockParentSqlite3.create("test")
       c1 = MockChildSqlite3.create(p.id.to_i64)
       c2 = MockChildSqlite3.create(p.id.to_i64)
       c3 = MockChildSqlite3.create(p.id.to_i64)

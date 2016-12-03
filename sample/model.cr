@@ -29,7 +29,7 @@ Topaz::Db.setup("sqlite3://./db/sample.db")
 
 # Setup tables
 # You can create or drop a table as follows
-# These calls should be defined in other files such as migration.cr
+# Actually, these calls should be defined in other files such as migration.cr
 SampleModel.drop_table
 SampleModel.create_table
 

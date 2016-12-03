@@ -1,6 +1,7 @@
 # Topaz
 
-Topaz is a simple and useful db wrapper for crystal lang.  
+Topaz is a simple and useful db wrapper for crystal lang.
+Topaz is inspired by ActiveRecord design pattern, but not fully implemented.
 See [sample code](https://github.com/tbrand/topaz/blob/master/sample) for detail.  
 Depends on [crystal-lang/crystal-mysql](https://github.com/crystal-lang/crystal-mysql)  
 
@@ -27,68 +28,55 @@ Topaz::Db.setup("sqlite3://./db/data.db") # For SQLite3
 class SampleModel < Topaz::Model
   columns(
     {name: name, type: String}
-    ...
   )
 end
+
+# You can drop or create a table
+SampleModel.create_table
+SampleModel.drop_table
 ```
 
-**3. Create, find, update and delete models**  
+**3. Create, find, update and delete models**
+```
+s = SampleModel.create("Sample Name")
+
+SampleModel.find(1).name
+# => "Sample Name"
+SampleModel.where("name = 'Sample Name'").size
+# => 1
+```
 See [sample code](https://github.com/tbrand/topaz/blob/master/sample/model.cr) for detail.
 
+**4. Define associations between models**
 ```crystal
 require "topaz"
 
-class SampleModel < Topaz::Model
-  columns(
-    {name: name, type: String},
-    {name: age, type: Int32},
-    {name: score, type: Int32},
-    {name: time, type: Float64},
-    {name: uid, type: Int32, primary: true}
-  )
-end
-
-SampleModel.create_table
-
-aaa = SampleModel.create("AAA", 25, 10, 20.0, 2)
-bbb = SampleModel.create("BBB", 26, 12, 32.0, 3)
-ccc = SampleModel.create("CCC", 25, 18, 40.0, 4)
-
-SampleModel.select.size
-# => 3
-
-SampleModel.where("age = 25").select.size
-# => 2
-
 class SampleParent < Topaz::Model
-  columns(
-    {name: name, type: String},
-    {has: SampleChild, as: childs}
-  )
+  columns # Empty columns
+  has_many( {model: SampleChild, as: childs, key: parent_id} )
 end
 
 class SampleChild < Topaz::Model
-  columns(
-    {name: name, type: String},
-    {name: parent_id, type: Int32, belongs: SampleParent, as: parent}
+  columns( # Define foreign key
+    {name: parent_id, type: Int32}
   )
+  belongs_to( {model: SampleParent, as: parent, key: parent_id} )
 end
 
-p = SampleParent.create("Parent")
+p = SampleParent.create
 
-child1 = SampleChild.create("Child1", p.id)
-child2 = SampleChild.create("Child2", p.id)
-child3 = SampleChild.create("Child3", p.id)
+child1 = SampleChild.create(p.id)
+child2 = SampleChild.create(p.id)
+child3 = SampleChild.create(p.id)
 
 p.childs.size
 # => 3
 
-child1.parent.name
-# => Parent
-
+child1.parent.id
+# => 1
 ```
-
 See [sample code](https://github.com/tbrand/topaz/blob/master/sample/association.cr) for detail.  
+
 **Supported data types.**
 ```
 [MySQL]

@@ -18,13 +18,20 @@ end
 
 class MockParent < Topaz::Model
   columns(
-    {has: MockChild, as: childs}
+    {name: name, type: String}
+  )
+
+  has_many(
+    {model: MockChild, as: childs, key: parent_id}
   )
 end
 
 class MockChild < Topaz::Model
   columns(
-    {name: parent_id, type: Int32, belongs: MockParent, as: parent}
+    {name: parent_id, type: Int32}
+  )
+  belongs_to(
+    {model: MockParent, as: parent, key: parent_id}
   )
 end
 
@@ -45,12 +52,20 @@ end
 
 class MockParentSqlite3 < Topaz::Model
   columns(
-    {has: MockChildSqlite3, as: childs}
+    {name: name, type: String}
+  )
+
+  has_many(
+    {model: MockChildSqlite3, as: childs, key: parent_id}
   )
 end
 
 class MockChildSqlite3 < Topaz::Model
   columns(
-    {name: parent_id, type: Int64, belongs: MockParentSqlite3, as: parent}
+    {name: parent_id, type: Int64}
+  )
+
+  belongs_to(
+    {model: MockParentSqlite3, as: parent, key: parent_id}
   )
 end

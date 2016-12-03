@@ -1,20 +1,20 @@
 # This is a main wrapper class for models.
-# Any class extending Topaz::Model can be transparent models for dabatases.
+# Any class extending Topaz::Model can be transparent models for databases.
 module Topaz
   class Model
     macro columns(*cols)
 
       {% data_exists = false %}
       {% for c in cols %}
-        {% if c[:name] != nil %}
+        {% if c[:name].id != nil %}
           {% data_exists = true %}
         {% end %}
       {% end %}
 
       def initialize(
             {% for c in cols %}
-              {% if c[:name] != nil %}
-                @{{c[:name]}} : {{c[:type]}}|Nil,
+              {% if c[:name].id != nil %}
+                @{{c[:name].id}} : {{c[:type].id}}|Nil,
               {% end %}
             {% end %}@q = "", @id = -1)
       end
@@ -23,7 +23,7 @@ module Topaz
                       @id : Int32,
                       {% for c in cols %}
                         {% if c[:name] != nil %}
-                          @{{c[:name]}} : {{c[:type]}}|Nil,
+                          @{{c[:name].id}} : {{c[:type].id}}|Nil,
                         {% end %}
                       {% end %}@q = "")
       end
@@ -31,7 +31,7 @@ module Topaz
       protected def initialize
         {% for c in cols %}
           {% if c[:name] != nil %}
-            @{{c[:name]}} = nil
+            @{{c[:name].id}} = nil
           {% end %}
         {% end %}
           @id = -1
@@ -42,7 +42,7 @@ module Topaz
         return @id
       end
 
-      protected def query(q)
+      def query(q)
         @q = q
         self
       end
@@ -73,6 +73,15 @@ module Topaz
 
       def self.delete
         new.delete
+      end
+
+      def self.join(model, column : String, foreign_key : String)
+        new.query("join #{model.table_name} on #{table_name}.#{foreign_key}=#{model.table_name}.#{column} ")
+      end
+
+      def where(q : String)
+        @q = "#{@q}where #{q} "
+        self
       end
 
       def and(q : String)
@@ -123,7 +132,7 @@ module Topaz
 
       def update
         {% if cols.size > 0 && data_exists %}
-          data = { {% for c in cols %}{% if c[:name] != nil %}{{c[:name]}}: @{{c[:name]}},{% end %}{% end %} }
+          data = { {% for c in cols %}{% if c[:name] != nil %}{{c[:name].id}}: @{{c[:name].id}},{% end %}{% end %} }
           update(data)
         {% end %}
       end
@@ -145,7 +154,7 @@ module Topaz
                   res.read(Int32), # id
                   {% for c in cols %}
                     {% if c[:name] != nil %}
-                      res.read({{c[:type]}}|Nil),
+                      res.read({{c[:type].id}}|Nil),
                     {% end %}
                   {% end %}
                 ))
@@ -155,7 +164,7 @@ module Topaz
                   res.read(Int64).to_i32, # id
                   {% for c in cols %}
                     {% if c[:name] != nil %}
-                      res.read({{c[:type]}}|Nil),
+                      res.read({{c[:type].id}}|Nil),
                     {% end %}
                   {% end %}
                 ))
@@ -167,8 +176,8 @@ module Topaz
         set
       end
 
-      def self.create({% for c in cols %}{% if c[:name] != nil %}{{c[:name]}} : {{c[:type]}}|Nil,{% end %}{% end %})
-        model = new({% for c in cols %}{% if c[:name] != nil %}{{c[:name]}},{% end %}{% end %})
+      def self.create({% for c in cols %}{% if c[:name] != nil %}{{c[:name].id}} : {{c[:type].id}}|Nil,{% end %}{% end %})
+        model = new({% for c in cols %}{% if c[:name] != nil %}{{c[:name].id}},{% end %}{% end %})
         res = model.save
         model
       end
@@ -180,8 +189,8 @@ module Topaz
 
         {% for c in cols %}
           {% if c[:name] != nil %}
-            keys.push("{{c[:name]}}") unless @{{c[:name]}}.nil?
-            vals.push("'#{@{{c[:name]}}}'") unless @{{c[:name]}}.nil?
+            keys.push("{{c[:name].id}}") unless @{{c[:name].id}}.nil?
+            vals.push("'#{@{{c[:name].id}}}'") unless @{{c[:name].id}}.nil?
           {% end %}
         {% end %}
 
@@ -199,14 +208,14 @@ module Topaz
       def to_a
         [
           ["id", @id],
-          {% for c in cols %}{% if c[:name] != nil %}["{{c[:name]}}", @{{c[:name]}}],{% end %}{% end %}
+          {% for c in cols %}{% if c[:name] != nil %}["{{c[:name].id}}", @{{c[:name].id}}],{% end %}{% end %}
         ]
       end
 
       def to_h
         {
           "id" => @id,
-          {% for c in cols %}{% if c[:name] != nil %}"{{c[:name]}}" => @{{c[:name]}},{% end %}{% end %}
+          {% for c in cols %}{% if c[:name] != nil %}"{{c[:name].id}}" => @{{c[:name].id}},{% end %}{% end %}
         }
       end
 
@@ -216,8 +225,8 @@ module Topaz
           @id
           {% for c in cols %}
             {% if c[:name] != nil %}
-            when "{{c[:name]}}"
-              @{{c[:name]}}
+            when "{{c[:name].id}}"
+              @{{c[:name].id}}
             {% end %}
           {% end %}
         end
@@ -229,8 +238,8 @@ module Topaz
           case key
               {% for c in cols %}
                 {% if c[:name] != nil %}
-                when "{{c[:name]}}"
-                  @{{c[:name]}} = value
+                when "{{c[:name].id}}"
+                  @{{c[:name].id}} = value
                 {% end %}
               {% end %}
           end
@@ -241,9 +250,9 @@ module Topaz
 
         case Topaz::Db.type
         when :mysql
-          query = "create table if not exists #{table_name}(id int auto_increment,{% for c in cols %}{% if c[:name] != nil %}{{c[:name]}} #{get_type({{c[:type]}})}{% if !c[:primary].nil? && c[:primary] %} primary key{% end %},{% end %}{% end %}index(id))"
+          query = "create table if not exists #{table_name}(id int auto_increment,{% for c in cols %}{% if c[:name] != nil %}{{c[:name].id}} #{get_type({{c[:type].id}})}{% if !c[:primary].nil? && c[:primary] %} primary key{% end %},{% end %}{% end %}index(id))"
         when :sqlite3
-          query = "create table if not exists #{table_name}(id integer primary key{% for c, i in cols %}{% if c[:name] != nil && data_exists %}, {{c[:name]}} #{get_type({{c[:type]}})}{% if !c[:primary].nil? && c[:primary] %} primary key{% end %}{% end %}{% end %})"
+          query = "create table if not exists #{table_name}(id integer primary key{% for c, i in cols %}{% if c[:name] != nil && data_exists %}, {{c[:name].id}} #{get_type({{c[:type].id}})}{% if !c[:primary].nil? && c[:primary] %} primary key{% end %}{% end %}{% end %})"
         else
           query = ""
         end
@@ -282,18 +291,6 @@ module Topaz
         typeof(self).downcase
       end
 
-      def self.parent_id(model)
-        {% if cols.size > 0 && data_exists %}
-          {% for c in cols %}
-            {% if c[:belongs] != nil %}
-              if model == {{c[:belongs]}}
-                "{{c[:name]}}"
-              end
-            {% end %}
-          {% end %}
-        {% end %}
-      end
-
       private def self.get_type(t)
         case t.to_s
         when "String"
@@ -313,25 +310,30 @@ module Topaz
 
       {% for c in cols %}
         {% if c[:name] != nil %}
-          def {{c[:name]}}=(@{{c[:name]}} : {{c[:type]}})
+          def {{c[:name].id}}=(@{{c[:name].id}} : {{c[:type].id}})
           end
 
-          def {{c[:name]}}
-            return @{{c[:name]}}
+          def {{c[:name].id}}
+            return @{{c[:name].id}}
           end
-
-          {% if c[:belongs] != nil %}
-            def {{c[:as]}}
-              {{c[:belongs]}}.find(@{{c[:name]}})
-            end
-          {% end %}
         {% end %}
-          {% if c[:has] != nil %}
-            def {{c[:as]}}
-              p_id = {{c[:has]}}.parent_id(typeof(self))
-              {{c[:has]}}.where("#{p_id} = '#{@id}'").select
-            end
-          {% end %}
+      {% end %}
+    end
+
+    macro has_many(*models)
+      {% for m in models %}
+        def {{m[:as].id}}
+          {{m[:model].id}}
+            .where("{{m[:key].id}} = #{@id}").select
+        end
+      {% end %}
+    end
+    
+    macro belongs_to(*models)
+      {% for m in models %}
+        def {{m[:as].id}}
+          {{m[:model].id}}.find({{m[:key].id}})
+        end
       {% end %}
     end
   end
