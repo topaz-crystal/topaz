@@ -1,1 +1,4 @@
 language: crystal
+
+before_script:
+  - mysql -uroot -e "create database topaz"
