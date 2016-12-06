@@ -1,6 +1,10 @@
-<img src="https://cloud.githubusercontent.com/assets/3483230/20856901/fad1885e-b95f-11e6-848d-c46e33d8290e.png" width="100px">
+<img src="https://cloud.githubusercontent.com/assets/3483230/20856901/fad1885e-b95f-11e6-848d-c46e33d8290e.png" width="100px"/>
 
-# Topaz
+# Topaz <img src="https://img.shields.io/github/stars/badges/shields.svg?style=social&label=Star"/>
+<a href="https://twitter.com/taichiro_dev"><img src="https://img.shields.io/twitter/follow/espadrine.svg?style=social&label=Follow"/></a>
+
+[![Dependency Status](https://shards.rocks/badge/github/tbrand/topaz/status.svg)](https://shards.rocks/github/tbrand/topaz)
+[![devDependency Status](https://shards.rocks/badge/github/tbrand/topaz/dev_status.svg)](https://shards.rocks/github/tbrand/topaz)
 
 Topaz is a simple and useful db wrapper for crystal lang.
 Topaz is inspired by active record design pattern, but not fully implemented.

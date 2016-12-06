@@ -10,7 +10,7 @@ end
 
 class JsonChild < Topaz::Model
   columns(
-    {name: age , type: Int64},
+    {name: age, type: Int64},
     {name: p_id, type: Int64}
   )
   has_many({model: JsonToy, as: toies, key: c_id})
@@ -39,15 +39,12 @@ end
 
 describe Topaz do
   Spec.before_each do
-    
     Topaz::Db.setup("sqlite3://./db/sample.db")
-    
     JsonParent.create_table
     JsonChild.create_table
     JsonPet.create_table
     JsonToy.create_table
     JsonPart.create_table
-    
     p = JsonParent.create("John")
 
     c1 = JsonChild.create(12i64, p.id.to_i64)
@@ -90,11 +87,11 @@ describe Topaz do
 
   it "p.to_json({include: {childlen: {except: [:id, :p_id]}, pets: nil} })" do
     p = JsonParent.select.first
-    p.to_json({include: {childlen: {except: [:id, :p_id]}, pets: nil} }).should eq "{\"id\": 1, \"name\": \"John\", \"childlen\": [{\"age\": 12}, {\"age\": 15}, {\"age\": 23}], \"pets\": [{\"id\": 1, \"p_id\": 1}, {\"id\": 2, \"p_id\": 1}, {\"id\": 3, \"p_id\": 1}, {\"id\": 4, \"p_id\": 1}]}"
+    p.to_json({include: {childlen: {except: [:id, :p_id]}, pets: nil}}).should eq "{\"id\": 1, \"name\": \"John\", \"childlen\": [{\"age\": 12}, {\"age\": 15}, {\"age\": 23}], \"pets\": [{\"id\": 1, \"p_id\": 1}, {\"id\": 2, \"p_id\": 1}, {\"id\": 3, \"p_id\": 1}, {\"id\": 4, \"p_id\": 1}]}"
   end
 
   it "p.to_json({include: {childlen: {include: {toies: {include: :parts, only: :price} } }, pets: nil} })" do
     p = JsonParent.select.first
-    p.to_json({include: {childlen: {include: {toies: {include: :parts, only: :price} } }, pets: nil} }).should eq "{\"id\": 1, \"name\": \"John\", \"childlen\": [{\"id\": 1, \"age\": 12, \"p_id\": 1, \"toies\": [{\"price\": 10, \"parts\": [{\"id\": 1, \"t_id\": 1}]}, {\"price\": 12, \"parts\": []}]}, {\"id\": 2, \"age\": 15, \"p_id\": 1, \"toies\": [{\"price\": 15, \"parts\": [{\"id\": 2, \"t_id\": 3}, {\"id\": 3, \"t_id\": 3}, {\"id\": 4, \"t_id\": 3}]}]}, {\"id\": 3, \"age\": 23, \"p_id\": 1, \"toies\": []}], \"pets\": [{\"id\": 1, \"p_id\": 1}, {\"id\": 2, \"p_id\": 1}, {\"id\": 3, \"p_id\": 1}, {\"id\": 4, \"p_id\": 1}]}"
+    p.to_json({include: {childlen: {include: {toies: {include: :parts, only: :price}}}, pets: nil}}).should eq "{\"id\": 1, \"name\": \"John\", \"childlen\": [{\"id\": 1, \"age\": 12, \"p_id\": 1, \"toies\": [{\"price\": 10, \"parts\": [{\"id\": 1, \"t_id\": 1}]}, {\"price\": 12, \"parts\": []}]}, {\"id\": 2, \"age\": 15, \"p_id\": 1, \"toies\": [{\"price\": 15, \"parts\": [{\"id\": 2, \"t_id\": 3}, {\"id\": 3, \"t_id\": 3}, {\"id\": 4, \"t_id\": 3}]}]}, {\"id\": 3, \"age\": 23, \"p_id\": 1, \"toies\": []}], \"pets\": [{\"id\": 1, \"p_id\": 1}, {\"id\": 2, \"p_id\": 1}, {\"id\": 3, \"p_id\": 1}, {\"id\": 4, \"p_id\": 1}]}"
   end
 end

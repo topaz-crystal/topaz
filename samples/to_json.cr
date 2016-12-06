@@ -10,7 +10,7 @@ end
 
 class JsonChild < Topaz::Model
   columns(
-    {name: age , type: Int64},
+    {name: age, type: Int64},
     {name: p_id, type: Int64}
   )
   has_many({model: JsonToy, as: toies, key: c_id})
@@ -80,10 +80,9 @@ puts p.to_json({include: :childlen, except: :id})
 puts ""
 
 puts "p.to_json({include: {childlen: {except: [:id, :p_id]}, pets: nil} })"
-puts p.to_json({include: {childlen: {except: [:id, :p_id]}, pets: nil} })
+puts p.to_json({include: {childlen: {except: [:id, :p_id]}, pets: nil}})
 puts ""
 
 puts "p.to_json({include: {childlen: {include: {toies: {include: :parts, only: :price} } }, pets: nil} })"
-puts p.to_json({include: {childlen: {include: {toies: {include: :parts, only: :price} } }, pets: nil} })
+puts p.to_json({include: {childlen: {include: {toies: {include: :parts, only: :price}}}, pets: nil}})
 puts ""
-

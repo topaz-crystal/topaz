@@ -3,7 +3,6 @@
 # Any class extending Topaz::Model can be transparent models for databases.
 module Topaz
   class Model
-    
     macro columns(*cols)
 
       {% data_exists = false %}
@@ -297,13 +296,13 @@ module Topaz
           end
         {% end %}
       end
-      
+
       protected def as_json(only : Array(Symbol), except : Array(Symbol))
-        
+
         json = ""
-        
+
         to_h.keys.each do |key|
-          
+
           is_string? = to_h[key].class == String
 
           Topaz::Log.w "only and except is set at the same time\nexcept will be ignored" if only.size > 0 && except.size > 0
@@ -320,7 +319,7 @@ module Topaz
         end
 
         raise "No json element found with your option" if json.size < 3
-        
+
         json[0..json.size-3]
       end
 
@@ -329,7 +328,7 @@ module Topaz
         included = ""
         only     = [] of Symbol
         except   = [] of Symbol
-        
+
         unless options.nil?
           options.each_key do |k|
             if k.to_s == "include"
@@ -351,13 +350,13 @@ module Topaz
             end
           end
         end
-        
+
         "{#{as_json(only, except)}#{included}}"
       end
 
       class Set < Array(self)
         def to_json(options : NamedTuple|Nil = nil)
-          
+
           json = "["
           each_with_index do |m, i|
             json += "#{m.to_json(options)}"
@@ -371,7 +370,7 @@ module Topaz
       {% for c in cols %}
         def {{c[:name].id}}=(@{{c[:name].id}} : {{c[:type].id}})
         end
-        
+
         def {{c[:name].id}} : {{c[:type].id}}
           return @{{c[:name].id}}.as({{c[:type].id}})
         end
