@@ -3,7 +3,7 @@
 # Topaz
 
 Topaz is a simple and useful db wrapper for crystal lang.
-Topaz is inspired by ActiveRecord design pattern, but not fully implemented.
+Topaz is inspired by active record design pattern, but not fully implemented.
 See [sample code](https://github.com/tbrand/topaz/blob/master/sample) for detail.
 [Here](https://github.com/tbrand/topaz-kemal-sample) is another sample that shows how Topaz works in Kemal.  
 Depends on [crystal-lang/crystal-mysql](https://github.com/crystal-lang/crystal-mysql) and [crystal-lang/crystal-sqlite3](https://github.com/crystal-lang/crystal-sqlite3)
@@ -81,12 +81,10 @@ child1.parent.id
 See [sample code](https://github.com/tbrand/topaz/blob/master/sample/association.cr) for detail.  
 
 **Supported data types.**
-```
 [MySQL]
 String, Int32, Float64, Float32
 [SQLite3]
 String, Int64, Float64
-```
 
 TODO:
 * Support DATE

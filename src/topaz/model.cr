@@ -1,7 +1,9 @@
+# coding: utf-8
 # This is a main wrapper class for models.
 # Any class extending Topaz::Model can be transparent models for databases.
 module Topaz
   class Model
+    
     macro columns(*cols)
 
       {% data_exists = false %}
@@ -14,7 +16,7 @@ module Topaz
       def initialize(
             {% for c in cols %}
               {% if c[:name].id != nil %}
-                @{{c[:name].id}} : {{c[:type].id}}|Nil,
+                @{{c[:name].id}} : {{c[:type].id}},
               {% end %}
             {% end %}@q = "", @id = -1)
       end
@@ -23,7 +25,7 @@ module Topaz
                       @id : Int32,
                       {% for c in cols %}
                         {% if c[:name] != nil %}
-                          @{{c[:name].id}} : {{c[:type].id}}|Nil,
+                          @{{c[:name].id}} : {{c[:type].id}},
                         {% end %}
                       {% end %}@q = "")
       end
@@ -113,9 +115,9 @@ module Topaz
 
       def update(data)
         @q = "where id = #{@id}" unless @id == -1
-        
+
         updated = ""
-        
+
         data.each_with_index do |k, v, i|
           unless v.nil?
             updated += "#{k} = \'#{v}\'"
@@ -123,12 +125,12 @@ module Topaz
             set_value_of(k.to_s, v) unless @id == -1
           end
         end
-         
+
         @q = "update #{table_name} set #{updated} #{@q}"
         exec
         @q = ""
       end
-       
+
       def update
         {% if cols.size > 0 && data_exists %}
           data = { {% for c in cols %}{% if c[:name] != nil %}{{c[:name].id}}: @{{c[:name].id}},{% end %}{% end %} }
@@ -136,31 +138,13 @@ module Topaz
         {% end %}
       end
 
-      #def update(data)
-      #  update
-      #end
-      # 
-      #def update
-      #  updated = ""
-      #  {% for c, i in cols %}
-      #    updated += "{{c[:name].id}} = \'#{ @{{c[:name].id}} }\'"
-      #    {% if i != cols.size-1 %}
-      #      updated += ", "
-      #    {% end %}
-      #  {% end %}
-      # 
-      #    puts updated
-      #  @q = "update #{table_name} set #{updated} #{@q}"
-      #  exec
-      #  @q = ""
-      #end
-
       def select
 
         @q = "select * from #{table_name} #{@q}"
         Topaz::Log.q @q
 
-        set = Array(typeof(self)).new
+        #set = Array(typeof(self)).new
+        set = Set.new
 
         Topaz::Db.open do |db|
           db.query(@q) do |res|
@@ -172,7 +156,7 @@ module Topaz
                   res.read(Int32), # id
                   {% for c in cols %}
                     {% if c[:name] != nil %}
-                      res.read({{c[:type].id}}|Nil),
+                      res.read({{c[:type].id}}),
                     {% end %}
                   {% end %}
                 ))
@@ -182,7 +166,7 @@ module Topaz
                   res.read(Int64).to_i32, # id
                   {% for c in cols %}
                     {% if c[:name] != nil %}
-                      res.read({{c[:type].id}}|Nil),
+                      res.read({{c[:type].id}}),
                     {% end %}
                   {% end %}
                 ))
@@ -194,7 +178,7 @@ module Topaz
         set
       end
 
-      def self.create({% for c in cols %}{% if c[:name] != nil %}{{c[:name].id}} : {{c[:type].id}}|Nil,{% end %}{% end %})
+      def self.create({% for c in cols %}{% if c[:name] != nil %}{{c[:name].id}} : {{c[:type].id}},{% end %}{% end %})
         model = new({% for c in cols %}{% if c[:name] != nil %}{{c[:name].id}},{% end %}{% end %})
         res = model.save
         model
@@ -221,6 +205,7 @@ module Topaz
         res = exec
         @q = ""
         @id = res.last_insert_id.to_i32
+        self
       end
 
       def to_a
@@ -299,8 +284,8 @@ module Topaz
         end
       end
 
-      def set_value_of(key : String, value : DB::Any)
-        
+      protected def set_value_of(key : String, value : DB::Any)
+
         {% if cols.size > 0 && data_exists %}
           case key
               {% for c in cols %}
@@ -312,16 +297,85 @@ module Topaz
           end
         {% end %}
       end
+      
+      protected def as_json(only : Array(Symbol), except : Array(Symbol))
+        
+        json = ""
+        
+        to_h.keys.each do |key|
+          
+          is_string? = to_h[key].class == String
+
+          Topaz::Log.w "only and except is set at the same time\nexcept will be ignored" if only.size > 0 && except.size > 0
+
+          add = !only.find{ |o| o.to_s == key }.nil? if only.size > 0
+          add = except.find{ |e| e.to_s == key }.nil? if except.size > 0 && add.nil?
+          add = true if add.nil?
+
+          if add
+            json += "\"#{key}\": \"#{to_h[key]}\"" if is_string?
+            json += "\"#{key}\": #{to_h[key]}" unless is_string?
+            json += ", "
+          end
+        end
+
+        raise "No json element found with your option" if json.size < 3
+        
+        json[0..json.size-3]
+      end
+
+      def to_json(options : NamedTuple|Nil = nil)
+
+        included = ""
+        only     = [] of Symbol
+        except   = [] of Symbol
+        
+        unless options.nil?
+          options.each_key do |k|
+            if k.to_s == "include"
+              if options[k].is_a?(Symbol)
+                ms = elements(options[k].as(Symbol))
+                included += ", \"#{options[k]}\": #{ms.to_json}" unless ms.nil?
+              elsif options[k].is_a?(NamedTuple)
+                options[k].as(NamedTuple).each_key do |_k|
+                  eles = elements(_k)
+                  included += ", \"#{_k}\": #{eles.to_json(options[k][_k])}" unless eles.nil?
+                end
+              end
+            elsif k.to_s == "except"
+              except = options[k].as(Array(Symbol)) if options[k].is_a?(Array(Symbol))
+              except = [ options[k].as(Symbol) ] if options[k].is_a?(Symbol)
+            elsif k.to_s == "only"
+              only = options[k].as(Array(Symbol)) if options[k].is_a?(Array(Symbol))
+              only = [ options[k].as(Symbol) ] if options[k].is_a?(Symbol)
+            end
+          end
+        end
+        
+        "{#{as_json(only, except)}#{included}}"
+      end
+
+      class Set < Array(self)
+        def to_json(options : NamedTuple|Nil = nil)
+          
+          json = "["
+          each_with_index do |m, i|
+            json += "#{m.to_json(options)}"
+            json += ", " if i != size-1
+          end
+          json += "]"
+          json
+        end
+      end
 
       {% for c in cols %}
-        {% if c[:name] != nil %}
-          def {{c[:name].id}}=(@{{c[:name].id}} : {{c[:type].id}})
-          end
-          
-          def {{c[:name].id}} : {{c[:type].id}}
-            return @{{c[:name].id}}.as({{c[:type].id}})
-          end
-        {% end %}
+        def {{c[:name].id}}=(@{{c[:name].id}} : {{c[:type].id}})
+        end
+        
+        def {{c[:name].id}} : {{c[:type].id}}
+          return @{{c[:name].id}}.as({{c[:type].id}})
+        end
+
       {% end %}
     end
 
@@ -332,8 +386,24 @@ module Topaz
             .where("{{m[:key].id}} = #{@id}").select
         end
       {% end %}
+
+        def elements(ms : Symbol|String)
+          {% if models.size > 0 %}
+            case ms
+                {% for m in models %}
+                when :{{m[:as].id}}, "{{m[:as].id}}"
+                  return {{m[:as].id}}
+                {% end %}
+            end
+          {% end %}
+            raise "No such elements #{ms} in #{typeof(self)}"
+        end
     end
-    
+
+    def elements(dummy : Symbol)
+      nil
+    end
+
     macro belongs_to(*models)
       {% for m in models %}
         def {{m[:as].id}}
