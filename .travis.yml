@@ -1,4 +1,4 @@
 language: crystal
 
-before_script:
+install:
   - sudo apt-get install -y sqlite3
