@@ -1,4 +1,4 @@
 language: crystal
 
 before_script:
-  - mysql -uroot -e "create database topaz"
+  - sudo apt-get install -y sqlite3
