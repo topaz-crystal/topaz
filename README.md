@@ -1,7 +1,6 @@
 <img src="https://cloud.githubusercontent.com/assets/3483230/20856901/fad1885e-b95f-11e6-848d-c46e33d8290e.png" width="100px"/>
 
-# Topaz <img src="https://img.shields.io/github/stars/badges/shields.svg?style=social&label=Star"/>
-<a href="https://twitter.com/taichiro_dev"><img src="https://img.shields.io/twitter/follow/espadrine.svg?style=social&label=Follow"/></a>
+# Topaz [![GitHub stars](https://img.shields.io/github/stars/badges/shields.svg?style=social&label=Star)](https://github.com/tbrand/topaz) [![Twitter Follow](https://img.shields.io/twitter/follow/espadrine.svg?style=social&label=Follow&style=flat-square)](https://twitter.com/taichiro_dev)
 
 [![Dependency Status](https://shards.rocks/badge/github/tbrand/topaz/status.svg)](https://shards.rocks/github/tbrand/topaz)
 [![devDependency Status](https://shards.rocks/badge/github/tbrand/topaz/dev_status.svg)](https://shards.rocks/github/tbrand/topaz)
