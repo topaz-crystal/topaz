@@ -80,11 +80,13 @@ child1.parent.id
 ```
 See [sample code](https://github.com/tbrand/topaz/blob/master/samples/association.cr) for detail.  
 
-**Supported data types.**
-[MySQL]
+**Supported data types.**  
+
+[MySQL]  
 String, Int32, Float64, Float32
-[SQLite3]
-String, Int64, Float64
+
+[SQLite3]  
+String, Int64, Float64  
 
 TODO:
 * Support DATE
