@@ -2,3 +2,4 @@ language: crystal
 
 install:
   - sudo apt-get install -y sqlite3
+  - crystal deps
