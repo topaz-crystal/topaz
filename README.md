@@ -4,7 +4,7 @@
 
 Topaz is a simple and useful db wrapper for crystal lang.
 Topaz is inspired by active record design pattern, but not fully implemented.
-See [sample code](https://github.com/tbrand/topaz/blob/master/sample) for detail.
+See [sample code](https://github.com/tbrand/topaz/blob/master/samples) for detail.
 [Here](https://github.com/tbrand/topaz-kemal-sample) is another sample that shows how Topaz works in Kemal.  
 Depends on [crystal-lang/crystal-mysql](https://github.com/crystal-lang/crystal-mysql) and [crystal-lang/crystal-sqlite3](https://github.com/crystal-lang/crystal-sqlite3)
 
@@ -48,7 +48,7 @@ SampleModel.find(1).name
 SampleModel.where("name = 'Sample Name'").size
 # => 1
 ```
-See [sample code](https://github.com/tbrand/topaz/blob/master/sample/model.cr) for detail.
+See [sample code](https://github.com/tbrand/topaz/blob/master/samples/model.cr) for detail.
 
 **4. Define associations between models**
 ```crystal
@@ -78,7 +78,7 @@ p.childs.size
 child1.parent.id
 # => 1
 ```
-See [sample code](https://github.com/tbrand/topaz/blob/master/sample/association.cr) for detail.  
+See [sample code](https://github.com/tbrand/topaz/blob/master/samples/association.cr) for detail.  
 
 **Supported data types.**
 [MySQL]
