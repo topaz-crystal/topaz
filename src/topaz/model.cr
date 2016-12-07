@@ -1,4 +1,3 @@
-# coding: utf-8
 # This is a main wrapper class for models.
 # Any class extending Topaz::Model can be transparent models for databases.
 module Topaz
