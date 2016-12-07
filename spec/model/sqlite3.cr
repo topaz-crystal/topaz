@@ -1,12 +1,12 @@
 require "../spec_helper"
 
-# # This spec creates real SQLite3 db into ./db/data.db
-# # `crystal spec` executes this.
+# # This spec needs real MySQL db with table 'topaz'.
+# # `crystal spec` doesn't execute this.
 
 class AllTypes < Topaz::Model
   columns(
     {name: type_string, type: String},
-    {name: type_integer, type: Int64},
+    {name: type_integer, type: Int32},
     {name: type_double, type: Float64},
   )
 end
@@ -14,7 +14,7 @@ end
 class MockModel < Topaz::Model
   columns(
     {name: name, type: String},
-    {name: age, type: Int64},
+    {name: age, type: Int32},
   )
 end
 
@@ -28,35 +28,35 @@ end
 
 class JsonChild < Topaz::Model
   columns(
-    {name: age, type: Int64},
-    {name: p_id, type: Int64}
+    {name: age, type: Int32},
+    {name: p_id, type: Int32}
   )
   has_many({model: JsonToy, as: toies, key: c_id})
   belongs_to({model: JsonParent, as: parent, key: p_id})
 end
 
 class JsonPet < Topaz::Model
-  columns({name: p_id, type: Int64})
+  columns({name: p_id, type: Int32})
   belongs_to({model: JsonParent, as: parent, key: p_id})
 end
 
 class JsonToy < Topaz::Model
   columns(
     {name: name, type: String},
-    {name: price, type: Int64},
-    {name: c_id, type: Int64}
+    {name: price, type: Int32},
+    {name: c_id, type: Int32}
   )
   has_many({model: JsonPart, as: parts, key: t_id})
   belongs_to({model: JsonChild, as: child, key: c_id})
 end
 
 class JsonPart < Topaz::Model
-  columns({name: t_id, type: Int64})
+  columns({name: t_id, type: Int32})
   belongs_to({model: JsonToy, as: toy, key: t_id})
 end
 
 Spec.before_each do
-  Topaz::Db.setup("sqlite3://./db/data.db")
+  Topaz::Db.setup("mysql://root@localhost/topaz")
   MockModel.create_table
   AllTypes.create_table
   JsonParent.create_table
@@ -80,10 +80,10 @@ end
 describe Topaz do
   describe "Using SQLite3" do
     it "All data types" do
-      AllTypes.create("test", 10.to_i64, 10.0)
+      AllTypes.create("test", 10, 10.0f64)
       AllTypes.select.size.should eq(1)
       10.times do |i|
-        MockModel.create("mock#{i}", i.to_i64)
+        MockModel.create("mock#{i}", i)
       end
       MockModel.find(1).name.should eq("mock0")
       MockModel.where("name = 'mock0'").select.size.should eq(1)
@@ -102,20 +102,20 @@ describe Topaz do
       MockModel.delete
       MockModel.select.size.should eq(0)
       p = JsonParent.create("John")
-      c1 = JsonChild.create(12i64, p.id.to_i64)
-      c2 = JsonChild.create(15i64, p.id.to_i64)
-      c3 = JsonChild.create(23i64, p.id.to_i64)
-      pe1 = JsonPet.create(p.id.to_i64)
-      pe2 = JsonPet.create(p.id.to_i64)
-      pe3 = JsonPet.create(p.id.to_i64)
-      pe4 = JsonPet.create(p.id.to_i64)
-      t1 = JsonToy.create("abc", 10i64, c1.id.to_i64)
-      t2 = JsonToy.create("def", 12i64, c1.id.to_i64)
-      t3 = JsonToy.create("ghi", 15i64, c2.id.to_i64)
-      pa1 = JsonPart.create(t1.id.to_i64)
-      pa2 = JsonPart.create(t3.id.to_i64)
-      pa3 = JsonPart.create(t3.id.to_i64)
-      pa4 = JsonPart.create(t3.id.to_i64)
+      c1 = JsonChild.create(12, p.id)
+      c2 = JsonChild.create(15, p.id)
+      c3 = JsonChild.create(23, p.id)
+      pe1 = JsonPet.create(p.id)
+      pe2 = JsonPet.create(p.id)
+      pe3 = JsonPet.create(p.id)
+      pe4 = JsonPet.create(p.id)
+      t1 = JsonToy.create("abc", 10i32, c1.id)
+      t2 = JsonToy.create("def", 12i32, c1.id)
+      t3 = JsonToy.create("ghi", 15i32, c2.id)
+      pa1 = JsonPart.create(t1.id)
+      pa2 = JsonPart.create(t3.id)
+      pa3 = JsonPart.create(t3.id)
+      pa4 = JsonPart.create(t3.id)
 
       p = JsonParent.select.first
       p.to_json.should eq "{\"id\": 1, \"name\": \"John\"}"

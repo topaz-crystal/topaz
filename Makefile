@@ -1,6 +1,6 @@
 test:
-	crystal spec ./spec/model/model_spec.cr
-	crystal spec ./spec/model/model_spec_for_mysql.cr
+	crystal spec ./spec/model/sqlite3.cr
+	crystal spec ./spec/model/mysql.cr
 sample:
 	crystal run ./samples/model.cr
 	crystal run ./samples/association.cr
