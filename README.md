@@ -1,6 +1,6 @@
 <img src="https://cloud.githubusercontent.com/assets/3483230/20856901/fad1885e-b95f-11e6-848d-c46e33d8290e.png" width="100px"/>
 
-# Topaz
+# Topaz [![Build Status](https://travis-ci.org/tbrand/topaz.svg?branch=master)](https://travis-ci.org/tbrand/topaz)
 [![Dependency Status](https://shards.rocks/badge/github/tbrand/topaz/status.svg)](https://shards.rocks/github/tbrand/topaz)
 [![devDependency Status](https://shards.rocks/badge/github/tbrand/topaz/dev_status.svg)](https://shards.rocks/github/tbrand/topaz)
 
