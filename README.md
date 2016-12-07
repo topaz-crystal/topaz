@@ -1,13 +1,13 @@
 <img src="https://cloud.githubusercontent.com/assets/3483230/20856901/fad1885e-b95f-11e6-848d-c46e33d8290e.png" width="100px"/>
 
-# Topaz [![Build Status](https://travis-ci.org/tbrand/topaz.svg?branch=master)](https://travis-ci.org/tbrand/topaz)
-[![Dependency Status](https://shards.rocks/badge/github/tbrand/topaz/status.svg)](https://shards.rocks/github/tbrand/topaz)
-[![devDependency Status](https://shards.rocks/badge/github/tbrand/topaz/dev_status.svg)](https://shards.rocks/github/tbrand/topaz)
+# Topaz [![Build Status](https://travis-ci.org/topaz-crystal/topaz.svg?branch=master)](https://travis-ci.org/topaz-crystal/topaz)
+[![Dependency Status](https://shards.rocks/badge/github/topaz-crystal/topaz/status.svg)](https://shards.rocks/github/topaz-crystal/topaz)
+[![devDependency Status](https://shards.rocks/badge/github/topaz-crystal/topaz/dev_status.svg)](https://shards.rocks/github/topaz-crystal/topaz)
 
 Topaz is a simple and useful db wrapper for crystal lang.
 Topaz is inspired by active record design pattern, but not fully implemented.
-See [sample code](https://github.com/tbrand/topaz/blob/master/samples) for detail.
-[Here](https://github.com/tbrand/topaz-kemal-sample) is another sample that shows how Topaz works in Kemal.  
+See [sample code](https://github.com/topaz-crystal/topaz/blob/master/samples) for detail.
+[Here](https://github.com/topaz-crystal/topaz-kemal-sample) is another sample that shows how Topaz works in Kemal.  
 Depends on [crystal-lang/crystal-mysql](https://github.com/crystal-lang/crystal-mysql) and [crystal-lang/crystal-sqlite3](https://github.com/crystal-lang/crystal-sqlite3)
 
 ## Installation
@@ -17,7 +17,7 @@ Add this to your application's `shard.yml`:
 ```yaml
 dependencies:
   topaz:
-    github: tbrand/topaz
+    github: topaz-crystal/topaz
 ```
 
 ## Usage
@@ -50,7 +50,7 @@ SampleModel.find(1).name
 SampleModel.where("name = 'Sample Name'").size
 # => 1
 ```
-See [sample code](https://github.com/tbrand/topaz/blob/master/samples/model.cr) for detail.
+See [sample code](https://github.com/topaz-crystal/topaz/blob/master/samples/model.cr) for detail.
 
 **4. Define associations between models**
 ```crystal
@@ -83,7 +83,7 @@ child1.parent.id
 p.json({include: :childs})
 # => {"id": 1, "childs": [{"id": 1, "parent_id": 1}, {"id": 2, "parent_id": 1}, {"id": 3, "parent_id": 1}]}
 ```
-See [sample code](https://github.com/tbrand/topaz/blob/master/samples/association.cr) for detail.  
+See [sample code](https://github.com/topaz-crystal/topaz/blob/master/samples/association.cr) for detail.  
 
 **Supported data types.**  
 
@@ -99,7 +99,7 @@ TODO:
 
 ## Contributing
 
-1. Fork it ( https://github.com/tbrand/topaz )
+1. Fork it ( https://github.com/topaz-crystal/topaz )
 2. Create your feature branch (git checkout -b my-new-feature)
 3. Commit your changes (git commit -am 'Add some feature')
 4. Push to the branch (git push origin my-new-feature)

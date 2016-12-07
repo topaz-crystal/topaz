@@ -4,14 +4,14 @@ Topaz::Db.setup("mysql://root@localhost/topaz") # For MySQL
 
 class SampleParent < Topaz::Model
   columns # Empty columns
-  has_many( {model: SampleChild, as: childs, key: parent_id} )
+  has_many({model: SampleChild, as: childs, key: parent_id})
 end
 
 class SampleChild < Topaz::Model
   columns( # Define foreign key
-    {name: parent_id, type: Int32}
+{name: parent_id, type: Int32}
   )
-  belongs_to( {model: SampleParent, as: parent, key: parent_id} )
+  belongs_to({model: SampleParent, as: parent, key: parent_id})
 end
 
 SampleParent.drop_table
