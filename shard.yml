@@ -12,4 +12,4 @@ dependencies:
   sqlite3:
     github: crystal-lang/crystal-sqlite3
   singleton:
-    github: tbrand/crystal-singleton
+    github: topaz-crystal/crystal-singleton

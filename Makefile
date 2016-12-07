@@ -4,5 +4,5 @@ test:
 sample:
 	crystal run ./samples/model.cr
 	crystal run ./samples/association.cr
-	crystal run ./samples/to_json.cr
+	crystal run ./samples/json.cr
 

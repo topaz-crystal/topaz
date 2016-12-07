@@ -71,18 +71,18 @@ pt2 = JsonPart.create(t3.id.to_i64)
 pt3 = JsonPart.create(t3.id.to_i64)
 pt4 = JsonPart.create(t3.id.to_i64)
 
-puts "p.to_json"
-puts p.to_json
+puts "p.json"
+puts p.json
 puts ""
 
-puts "p.to_json({include: :childlen, except: :id})"
-puts p.to_json({include: :childlen, except: :id})
+puts "p.json({include: :childlen, except: :id})"
+puts p.json({include: :childlen, except: :id})
 puts ""
 
-puts "p.to_json({include: {childlen: {except: [:id, :p_id]}, pets: nil} })"
-puts p.to_json({include: {childlen: {except: [:id, :p_id]}, pets: nil}})
+puts "p.json({include: {childlen: {except: [:id, :p_id]}, pets: nil} })"
+puts p.json({include: {childlen: {except: [:id, :p_id]}, pets: nil}})
 puts ""
 
-puts "p.to_json({include: {childlen: {include: {toies: {include: :parts, only: :price} } }, pets: nil} })"
-puts p.to_json({include: {childlen: {include: {toies: {include: :parts, only: :price}}}, pets: nil}})
+puts "p.json({include: {childlen: {include: {toies: {include: :parts, only: :price} } }, pets: nil} })"
+puts p.json({include: {childlen: {include: {toies: {include: :parts, only: :price}}}, pets: nil}})
 puts ""

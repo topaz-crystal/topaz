@@ -322,7 +322,7 @@ module Topaz
         json[0..json.size-3]
       end
 
-      def to_json(options : NamedTuple|Nil = nil)
+      def json(options : NamedTuple|Nil = nil)
 
         included = ""
         only     = [] of Symbol
@@ -333,11 +333,11 @@ module Topaz
             if k.to_s == "include"
               if options[k].is_a?(Symbol)
                 ms = elements(options[k].as(Symbol))
-                included += ", \"#{options[k]}\": #{ms.to_json}" unless ms.nil?
+                included += ", \"#{options[k]}\": #{ms.json}" unless ms.nil?
               elsif options[k].is_a?(NamedTuple)
                 options[k].as(NamedTuple).each_key do |_k|
                   eles = elements(_k)
-                  included += ", \"#{_k}\": #{eles.to_json(options[k][_k])}" unless eles.nil?
+                  included += ", \"#{_k}\": #{eles.json(options[k][_k])}" unless eles.nil?
                 end
               end
             elsif k.to_s == "except"
@@ -354,11 +354,11 @@ module Topaz
       end
 
       class Set < Array(self)
-        def to_json(options : NamedTuple|Nil = nil)
+        def json(options : NamedTuple|Nil = nil)
 
           json = "["
           each_with_index do |m, i|
-            json += "#{m.to_json(options)}"
+            json += "#{m.json(options)}"
             json += ", " if i != size-1
           end
           json += "]"
