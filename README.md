@@ -80,8 +80,8 @@ p.childs.size
 child1.parent.id
 # => 1
 
-p.childs.json
-# => [{"id": 1, "parent_id": 1}, {"id": 2, "parent_id": 1}, {"id": 3, "parent_id": 1}]
+p.json({include: :childs})
+# => {"id": 1, "childs": [{"id": 1, "parent_id": 1}, {"id": 2, "parent_id": 1}, {"id": 3, "parent_id": 1}]}
 ```
 See [sample code](https://github.com/tbrand/topaz/blob/master/samples/association.cr) for detail.  
 
