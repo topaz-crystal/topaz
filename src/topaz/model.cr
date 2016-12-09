@@ -11,13 +11,13 @@ module Topaz
         {% end %}
       {% end %}
 
-      def initialize(
-            {% for c in cols %}
-              {% if c[:name].id != nil %}
-                @{{c[:name].id}} : {{c[:type].id}},
-              {% end %}
-            {% end %}@q = "", @id = -1)
-      end
+        def initialize(
+              {% for c in cols %}
+                {% if c[:name].id != nil %}
+                  @{{c[:name].id}} : {{c[:type].id}},
+                {% end %}
+              {% end %}@q = "", @id = -1)
+        end
 
       protected def initialize(
                       @id : Int32,
@@ -35,7 +35,7 @@ module Topaz
           {% end %}
         {% end %}
           @id = -1
-          @q = ""
+        @q = ""
       end
 
       def id
@@ -141,41 +141,38 @@ module Topaz
         @q = "select * from #{table_name} #{@q}"
         Topaz::Log.q @q
 
-        #set = Array(typeof(self)).new
         set = Set.new
 
-        Topaz::Db.open do |db|
-          db.query(@q) do |res|
-            res.each do
-              case Topaz::Db.type
-              when :mysql
-                set.push(
-                  typeof(self).new(
-                  res.read(Int32), # id
-                  {% for c in cols %}
-                    {% if c[:name] != nil %}
-                      res.read({{c[:type].id}}),
-                    {% end %}
+        Topaz::Db.shared.query(@q) do |res|
+          res.each do
+            case Topaz::Db.scheme
+            when "mysql"
+              set.push(
+                typeof(self).new(
+                res.read(Int32), # id
+                {% for c in cols %}
+                  {% if c[:name] != nil %}
+                    res.read({{c[:type].id}}),
                   {% end %}
-                ))
-              when :sqlite3
-                set.push(
-                  typeof(self).new(
-                  res.read(Int64).to_i32, # id
-                  {% for c in cols %}
-                    {% if c[:name] != nil %}
-                      res.read({{c[:type].id}}),
-                    {% end %}
+                {% end %}
+              ))
+            when "sqlite3"
+              set.push(
+                typeof(self).new(
+                res.read(Int64).to_i32, # id
+                {% for c in cols %}
+                  {% if c[:name] != nil %}
+                    res.read({{c[:type].id}}),
                   {% end %}
-                ))
-              end
+                {% end %}
+              ))
             end
           end
+          
+          set
         end
-
-        set
       end
-
+      
       def self.create({% for c in cols %}{% if c[:name] != nil %}{{c[:name].id}} : {{c[:type].id}},{% end %}{% end %})
         model = new({% for c in cols %}{% if c[:name] != nil %}{{c[:name].id}},{% end %}{% end %})
         res = model.save
@@ -194,7 +191,7 @@ module Topaz
           {% end %}
         {% end %}
 
-        _keys = keys.join(", ")
+          _keys = keys.join(", ")
         _vals = vals.join(", ")
 
         @q = "insert into #{table_name} values(null)" if _vals.empty?
@@ -222,10 +219,10 @@ module Topaz
 
       def self.create_table
 
-        case Topaz::Db.type
-        when :mysql
+        case Topaz::Db.scheme
+        when "mysql"
           query = "create table if not exists #{table_name}(id int auto_increment,{% for c in cols %}{% if c[:name] != nil %}{{c[:name].id}} #{get_type({{c[:type].id}})}{% if !c[:primary].nil? && c[:primary] %} primary key{% end %},{% end %}{% end %}index(id))"
-        when :sqlite3
+        when "sqlite3"
           query = "create table if not exists #{table_name}(id integer primary key{% for c, i in cols %}{% if c[:name] != nil && data_exists %}, {{c[:name].id}} #{get_type({{c[:type].id}})}{% if !c[:primary].nil? && c[:primary] %} primary key{% end %}{% end %}{% end %})"
         else
           query = ""
@@ -241,9 +238,7 @@ module Topaz
 
       def exec
         Topaz::Log.q @q
-        Topaz::Db.open do |db|
-          return db.exec @q
-        end
+        Topaz::Db.shared.exec @q
       end
 
       protected def self.exec(q)
@@ -270,11 +265,11 @@ module Topaz
         when "String"
           "text"
         when "Int32"
-          return "int" if Topaz::Db.type == :mysql
-          return "integer" if Topaz::Db.type == :sqlite3
+          return "int" if Topaz::Db.scheme == "mysql"
+          return "integer" if Topaz::Db.scheme == "sqlite3"
         when "Int64"
-          return "int" if Topaz::Db.type == :mysql
-          return "integer" if Topaz::Db.type == :sqlite3
+          return "int" if Topaz::Db.scheme == "mysql"
+          return "integer" if Topaz::Db.scheme == "sqlite3"
         when "Float32"
           "float"
         when "Float64"

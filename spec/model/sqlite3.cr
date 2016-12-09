@@ -74,7 +74,7 @@ Spec.after_each do
   JsonPet.drop_table
   JsonToy.drop_table
   JsonPart.drop_table
-  Topaz::Db.clean
+  Topaz::Db.close
 end
 
 describe Topaz do
