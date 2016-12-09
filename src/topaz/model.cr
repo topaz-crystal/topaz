@@ -1,7 +1,12 @@
-# This is a main wrapper class for models.
-# Any class extending Topaz::Model can be transparent models for databases.
+# This is a main wrapper class for Topaz models.
+# Any class extending Topaz::Model can be transparent models for any databases.
+# The model have to call `columns` macro even if you don't have any columns 
+# since the calling contruct every necessary functions
 module Topaz
   class Model
+
+    getter id
+    
     macro columns(*cols)
 
       {% data_exists = false %}
@@ -36,10 +41,6 @@ module Topaz
         {% end %}
           @id = -1
         @q = ""
-      end
-
-      def id
-        return @id
       end
 
       def query(q)

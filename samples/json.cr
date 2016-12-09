@@ -1,5 +1,12 @@
 require "../src/topaz"
 
+# In this sample, we have
+# JsonParent
+#  - JsonChild
+#    - JsonToy
+#      - JsonPart
+#  - JsonPet
+
 class JsonParent < Topaz::Model
   columns({name: name, type: String})
   has_many(
@@ -71,18 +78,23 @@ pt2 = JsonPart.create(t3.id.to_i64)
 pt3 = JsonPart.create(t3.id.to_i64)
 pt4 = JsonPart.create(t3.id.to_i64)
 
+# The most simple case
+# Print JsonParent as json
 puts "p.json"
 puts p.json
 puts ""
 
+# Print JsonParent as json including childlen and excepting id of JsonParent
 puts "p.json({include: :childlen, except: :id})"
 puts p.json({include: :childlen, except: :id})
 puts ""
 
+# Print JsonParent as json including childlen and pets with options
 puts "p.json({include: {childlen: {except: [:id, :p_id]}, pets: nil} })"
 puts p.json({include: {childlen: {except: [:id, :p_id]}, pets: nil}})
 puts ""
 
+# Print JsonParent as json including childlen, pets, toies and parts
 puts "p.json({include: {childlen: {include: {toies: {include: :parts, only: :price} } }, pets: nil} })"
 puts p.json({include: {childlen: {include: {toies: {include: :parts, only: :price}}}, pets: nil}})
 puts ""
