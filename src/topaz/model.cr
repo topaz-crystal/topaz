@@ -11,33 +11,25 @@ module Topaz
 
       {% data_exists = false %}
       {% for c in cols %}
-        {% if c[:name].id != nil %}
-          {% data_exists = true %}
-        {% end %}
+        {% data_exists = true %}
       {% end %}
 
         def initialize(
               {% for c in cols %}
-                {% if c[:name].id != nil %}
-                  @{{c[:name].id}} : {{c[:type].id}},
-                {% end %}
+                @{{c[:name].id}} : {{c[:type].id}},
               {% end %}@q = "", @id = -1)
         end
 
       protected def initialize(
                       @id : Int32,
                       {% for c in cols %}
-                        {% if c[:name] != nil %}
-                          @{{c[:name].id}} : {{c[:type].id}},
-                        {% end %}
+                        @{{c[:name].id}} : {{c[:type].id}},
                       {% end %}@q = "")
       end
 
       protected def initialize
         {% for c in cols %}
-          {% if c[:name] != nil %}
-            @{{c[:name].id}} = nil
-          {% end %}
+          @{{c[:name].id}} = nil
         {% end %}
           @id = -1
         @q = ""
@@ -132,7 +124,7 @@ module Topaz
 
       def update
         {% if cols.size > 0 && data_exists %}
-          data = { {% for c in cols %}{% if c[:name] != nil %}{{c[:name].id}}: @{{c[:name].id}},{% end %}{% end %} }
+          data = { {% for c in cols %}{{c[:name].id}}: @{{c[:name].id}},{% end %} }
           update(data)
         {% end %}
       end
@@ -152,9 +144,7 @@ module Topaz
                 typeof(self).new(
                 res.read(Int32), # id
                 {% for c in cols %}
-                  {% if c[:name] != nil %}
-                    res.read({{c[:type].id}}),
-                  {% end %}
+                  res.read({{c[:type].id}}),
                 {% end %}
               ))
             when "sqlite3"
@@ -162,9 +152,7 @@ module Topaz
                 typeof(self).new(
                 res.read(Int64).to_i32, # id
                 {% for c in cols %}
-                  {% if c[:name] != nil %}
-                    res.read({{c[:type].id}}),
-                  {% end %}
+                  res.read({{c[:type].id}}),
                 {% end %}
               ))
             end
@@ -173,8 +161,8 @@ module Topaz
         end
       end
 
-      def self.create({% for c in cols %}{% if c[:name] != nil %}{{c[:name].id}} : {{c[:type].id}},{% end %}{% end %})
-        model = new({% for c in cols %}{% if c[:name] != nil %}{{c[:name].id}},{% end %}{% end %})
+      def self.create({% for c in cols %}{{c[:name].id}} : {{c[:type].id}},{% end %})
+        model = new({% for c in cols %}{{c[:name].id}},{% end %})
         res = model.save
         model
       end
@@ -185,10 +173,8 @@ module Topaz
         vals = [] of String
 
         {% for c in cols %}
-          {% if c[:name] != nil %}
-            keys.push("{{c[:name].id}}") unless @{{c[:name].id}}.nil?
-            vals.push("'#{@{{c[:name].id}}}'") unless @{{c[:name].id}}.nil?
-          {% end %}
+          keys.push("{{c[:name].id}}") unless @{{c[:name].id}}.nil?
+          vals.push("'#{@{{c[:name].id}}}'") unless @{{c[:name].id}}.nil?
         {% end %}
 
           _keys = keys.join(", ")
@@ -208,14 +194,14 @@ module Topaz
       def to_a
         [
           ["id", @id],
-          {% for c in cols %}{% if c[:name] != nil %}["{{c[:name].id}}", @{{c[:name].id}}],{% end %}{% end %}
+          {% for c in cols %}["{{c[:name].id}}", @{{c[:name].id}}],{% end %}
         ]
       end
 
       def to_h
         {
           "id" => @id,
-          {% for c in cols %}{% if c[:name] != nil %}"{{c[:name].id}}" => @{{c[:name].id}},{% end %}{% end %}
+          {% for c in cols %}"{{c[:name].id}}" => @{{c[:name].id}},{% end %}
         }
       end
 
@@ -223,11 +209,11 @@ module Topaz
 
         case Topaz::Db.scheme
         when "mysql"
-          query = "create table if not exists #{table_name}(id int auto_increment,{% for c in cols %}{% if c[:name] != nil %}{{c[:name].id}} #{get_type({{c[:type].id}})}{% if !c[:primary].nil? && c[:primary] %} primary key{% end %},{% end %}{% end %}index(id))"
+          query = "create table if not exists #{table_name}(id int auto_increment,{% for c in cols %}{{c[:name].id}} #{get_type({{c[:type].id}})}{% if !c[:primary].nil? && c[:primary] %} primary key{% end %},{% end %}index(id))"
         when "postgres"
-          query = "create table if not exists #{table_name}(id serial,{% for c, i in cols %}{% if c[:name] != nil %}{{c[:name].id}} #{get_type({{c[:type].id}})}{% if !c[:primary].nil? && c[:primary] %} primary key{% end %}{% if i != cols.size-1 %},{% end %}{% end %}{% end %})"
+          query = "create table if not exists #{table_name}(id serial,{% for c, i in cols %}{{c[:name].id}} #{get_type({{c[:type].id}})}{% if !c[:primary].nil? && c[:primary] %} primary key{% end %}{% if i != cols.size-1 %},{% end %}{% end %})"
         when "sqlite3"
-          query = "create table if not exists #{table_name}(id integer primary key{% for c, i in cols %}{% if c[:name] != nil && data_exists %}, {{c[:name].id}} #{get_type({{c[:type].id}})}{% if !c[:primary].nil? && c[:primary] %} primary key{% end %}{% end %}{% end %})"
+          query = "create table if not exists #{table_name}(id integer primary key{% for c, i in cols %}{% if data_exists %}, {{c[:name].id}} #{get_type({{c[:type].id}})}{% if !c[:primary].nil? && c[:primary] %} primary key{% end %}{% end %}{% end %})"
         else
           query = ""
         end
@@ -287,10 +273,8 @@ module Topaz
         {% if cols.size > 0 && data_exists %}
           case key
               {% for c in cols %}
-                {% if c[:name] != nil %}
-                when "{{c[:name].id}}"
-                  @{{c[:name].id}} = value
-                {% end %}
+              when "{{c[:name].id}}"
+                @{{c[:name].id}} = value
               {% end %}
           end
         {% end %}
