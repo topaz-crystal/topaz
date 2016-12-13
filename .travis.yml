@@ -19,6 +19,7 @@ before_install:
   - sudo sqlite3 -version
   - sudo service postgresql stop
   - sudo service postgresql start $TRAVIS_POSTGRESQL_VERSION
+  - createuser root
   - createdb topaz
   - export DATABASE_URL=postgres://root@localhost/topaz
 script: make test
