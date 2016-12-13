@@ -1,4 +1,13 @@
+addons:
+  postgresql: "9.4"
 language: crystal
+crystal:
+  - latest
+env:
+  - TRAVIS_POSTGRESQL_VERSION=9.4
+  - TRAVIS_POSTGRESQL_VERSION=9.3
+  - TRAVIS_POSTGRESQL_VERSION=9.2
+  - TRAVIS_POSTGRESQL_VERSION=9.1
 before_install:
   - mysql -uroot -e "create database topaz"
   - sudo apt-get autoremove sqlite3
@@ -8,4 +17,8 @@ before_install:
   - sudo apt-cache show sqlite3
   - sudo apt-get install sqlite3=3.7.15.1-1~travis1
   - sudo sqlite3 -version
+  - sudo service postgresql stop
+  - sudo service postgresql start $TRAVIS_POSTGRESQL_VERSION
+  - createdb topaz
+  - export DATABASE_URL=postgres://root@localhost/topaz
 script: make test

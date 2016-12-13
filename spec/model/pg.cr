@@ -1,6 +1,6 @@
 require "../spec_helper"
 
-# This spec needs real MySQL db with table 'topaz'.
+# This spec needs real PostgreSQL db with table 'topaz'.
 # `crystal spec` doesn't execute this.
 
 class AllTypes < Topaz::Model
@@ -57,7 +57,7 @@ class JsonPart < Topaz::Model
 end
 
 Spec.before_each do
-  Topaz::Db.setup("mysql://root@localhost/topaz")
+  Topaz::Db.setup("postgres://root@localhost/topaz")
   MockModel.create_table
   AllTypes.create_table
   JsonParent.create_table
@@ -79,7 +79,7 @@ Spec.after_each do
 end
 
 describe Topaz do
-  it "Using MySQL" do
+  it "Using PostgreSQL" do
     AllTypes.create("test", 10, 12.0f32, 10.0)
     AllTypes.select.size.should eq(1)
     10.times do |i|
@@ -123,8 +123,7 @@ describe Topaz do
     c2.toies.size.should eq 1
     t1.parts.size.should eq 1
     t3.parts.size.should eq 3
-
-    p = JsonParent.select.first
+    
     p.json.should eq "{\"id\": 1, \"name\": \"John\"}"
     p.json({include: :childlen, except: :id}).should eq "{\"name\": \"John\", \"childlen\": [{\"id\": 1, \"age\": 12, \"p_id\": 1}, {\"id\": 2, \"age\": 15, \"p_id\": 1}, {\"id\": 3, \"age\": 23, \"p_id\": 1}]}"
     p.json({include: {childlen: {except: [:id, :p_id]}, pets: nil}}).should eq "{\"id\": 1, \"name\": \"John\", \"childlen\": [{\"age\": 12}, {\"age\": 15}, {\"age\": 23}], \"pets\": [{\"id\": 1, \"p_id\": 1}, {\"id\": 2, \"p_id\": 1}, {\"id\": 3, \"p_id\": 1}, {\"id\": 4, \"p_id\": 1}]}"

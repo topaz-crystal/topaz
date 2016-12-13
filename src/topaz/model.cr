@@ -1,12 +1,12 @@
 # This is a main wrapper class for Topaz models.
 # Any class extending Topaz::Model can be transparent models for any databases.
-# The model have to call `columns` macro even if you don't have any columns 
+# The model have to call `columns` macro even if you don't have any columns
 # since the calling contruct every necessary functions
 module Topaz
   class Model
-
-    getter id
     
+    getter id
+
     macro columns(*cols)
 
       {% data_exists = false %}
@@ -147,7 +147,7 @@ module Topaz
         Topaz::Db.shared.query(@q) do |res|
           res.each do
             case Topaz::Db.scheme
-            when "mysql"
+            when "mysql", "postgres"
               set.push(
                 typeof(self).new(
                 res.read(Int32), # id
@@ -169,11 +169,10 @@ module Topaz
               ))
             end
           end
-          
           set
         end
       end
-      
+
       def self.create({% for c in cols %}{% if c[:name] != nil %}{{c[:name].id}} : {{c[:type].id}},{% end %}{% end %})
         model = new({% for c in cols %}{% if c[:name] != nil %}{{c[:name].id}},{% end %}{% end %})
         res = model.save
@@ -197,10 +196,12 @@ module Topaz
 
         @q = "insert into #{table_name} values(null)" if _vals.empty?
         @q = "insert into #{table_name}(#{_keys}) values(#{_vals})" unless _vals.empty?
-
+        
         res = exec
         @q = ""
         @id = res.last_insert_id.to_i32
+        # Note: Currently will/crystal-pg is not support last_insert_id.to_i32
+        @id = typeof(self).select.last.id if @id == 0
         self
       end
 
@@ -223,6 +224,8 @@ module Topaz
         case Topaz::Db.scheme
         when "mysql"
           query = "create table if not exists #{table_name}(id int auto_increment,{% for c in cols %}{% if c[:name] != nil %}{{c[:name].id}} #{get_type({{c[:type].id}})}{% if !c[:primary].nil? && c[:primary] %} primary key{% end %},{% end %}{% end %}index(id))"
+        when "postgres"
+          query = "create table if not exists #{table_name}(id serial,{% for c, i in cols %}{% if c[:name] != nil %}{{c[:name].id}} #{get_type({{c[:type].id}})}{% if !c[:primary].nil? && c[:primary] %} primary key{% end %}{% if i != cols.size-1 %},{% end %}{% end %}{% end %})"
         when "sqlite3"
           query = "create table if not exists #{table_name}(id integer primary key{% for c, i in cols %}{% if c[:name] != nil && data_exists %}, {{c[:name].id}} #{get_type({{c[:type].id}})}{% if !c[:primary].nil? && c[:primary] %} primary key{% end %}{% end %}{% end %})"
         else
@@ -264,22 +267,23 @@ module Topaz
       private def self.get_type(t)
         case t.to_s
         when "String"
-          "text"
+          return "text"
         when "Int32"
           return "int" if Topaz::Db.scheme == "mysql"
-          return "integer" if Topaz::Db.scheme == "sqlite3"
+          return "integer" if Topaz::Db.scheme == "sqlite3" || Topaz::Db.scheme == "postgres"
         when "Int64"
-          return "int" if Topaz::Db.scheme == "mysql"
+          return "bigint" if Topaz::Db.scheme == "mysql" || Topaz::Db.scheme == "postgres"
           return "integer" if Topaz::Db.scheme == "sqlite3"
         when "Float32"
-          "float"
-        when "Float64"
-          "double"
+          return "float" if Topaz::Db.scheme == "mysql" || Topaz::Db.scheme == "sqlite3"
+          return "real" if Topaz::Db.scheme ==  "postgres"
+        when "Float64" 
+          return "double" if Topaz::Db.scheme == "mysql" || Topaz::Db.scheme == "sqlite3"
+          return "double precision" if Topaz::Db.scheme == "postgres"
         end
       end
 
       protected def set_value_of(key : String, value : DB::Any)
-
         {% if cols.size > 0 && data_exists %}
           case key
               {% for c in cols %}
@@ -376,8 +380,7 @@ module Topaz
     macro has_many(*models)
       {% for m in models %}
         def {{m[:as].id}}
-          {{m[:model].id}}
-            .where("{{m[:key].id}} = #{@id}").select
+          {{m[:model].id}}.where("{{m[:key].id}} = #{@id}").select
         end
       {% end %}
 
@@ -394,8 +397,8 @@ module Topaz
         end
     end
 
-    def elements(dummy : Symbol)
-      nil
+    def elements(dummy : Symbol|String)
+      raise "dummy elements has benn called."
     end
 
     macro belongs_to(*models)

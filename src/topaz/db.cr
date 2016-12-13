@@ -1,11 +1,11 @@
 require "singleton"
 require "mysql"
 require "sqlite3"
+require "pg"
 
 module Topaz
   class Db
-
-    @@shared : DB::Database|Nil
+    @@shared : DB::Database | Nil
 
     # Setup a database by connection uri as String
     # See official sample for detail

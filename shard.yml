@@ -11,5 +11,7 @@ dependencies:
     github: crystal-lang/crystal-mysql
   sqlite3:
     github: crystal-lang/crystal-sqlite3
+  pg:
+    github: will/crystal-pg
   singleton:
     github: topaz-crystal/crystal-singleton
