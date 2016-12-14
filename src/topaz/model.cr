@@ -8,16 +8,11 @@ module Topaz
 
     macro columns(cols)
 
-      {% data_exists = false %}
-      {% if cols.size > 0 %}
-        {% data_exists = true %}
-      {% end %}
-
-        def initialize(
-              {% for key, value in cols %}
-                @{{key.id}} : {{value.id}},
-              {% end %}@q = "", @id = -1)
-        end
+      def initialize(
+            {% for key, value in cols %}
+              @{{key.id}} : {{value.id}},
+            {% end %}@q = "", @id = -1)
+      end
 
       protected def initialize(
                       @id : Int32,
@@ -59,8 +54,8 @@ module Topaz
         new.select
       end
 
-      def self.update(data)
-        new.update(data)
+      def self.update(**data)
+        new.update(**data)
       end
 
       def self.delete
@@ -103,29 +98,30 @@ module Topaz
         @q = ""
       end
 
-      def update(data)
-        @q = "where id = #{@id}" unless @id == -1
+      def update(**data)
 
         updated = ""
 
-        data.each_with_index do |k, v, i|
-          unless v.nil?
-            updated += "#{k} = \'#{v}\'"
-            updated += ", " if i != data.size-1
-            set_value_of(k.to_s, v) unless @id == -1
+        if data.keys.size == 0
+          {% for key, value, idx in cols %}
+            updated += "{{key}} = \'#{@{{key}}}\'" unless @{{key}}.nil?
+            {% if idx != cols.size - 1 %}
+              updated += ", "
+            {% end %}
+          {% end %}
+        else
+          data.each_with_index do |key, value, idx|
+            unless value.nil?
+              updated += "#{key} = \'#{value}\'"
+              updated += ", " if idx != data.size-1
+              set_value_of(key.to_s, value) unless @id == -1
+            end
           end
         end
 
         @q = "update #{table_name} set #{updated} #{@q}"
         exec
         @q = ""
-      end
-
-      def update
-        {% if data_exists %}
-          data = { {% for key, value in cols %}{{key.id}}: @{{key.id}},{% end %} }
-          update(data)
-        {% end %}
       end
 
       def select
@@ -279,7 +275,7 @@ module Topaz
       end
 
       protected def set_value_of(_key : String, _value : DB::Any)
-        {% if data_exists %}
+        {% if cols.size > 0 %}
           case _key
               {% for key, value in cols %}
               when "{{key.id}}"
