@@ -100,6 +100,8 @@ module Topaz
 
       def update(**data)
 
+        @q = "where id = #{@id}" unless @id == -1
+
         updated = ""
 
         if data.keys.size == 0
