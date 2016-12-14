@@ -69,7 +69,7 @@ aaa.name
 # => AAA+
 
 # You can update columns by using Hash (NamedTuple actually)
-bbb.update({name: "BBB+"})
+bbb.update(name: "BBB+")
 bbb.name
 # => BBB+
 
