@@ -179,8 +179,18 @@ module Topaz
         _keys = keys.join(", ")
         _vals = vals.join(", ")
 
-        @q = "insert into #{table_name} values(null)" if _vals.empty?
-        @q = "insert into #{table_name}(#{_keys}) values(#{_vals})" unless _vals.empty?
+        if _vals.empty?
+          case Topaz::Db.scheme
+          when "mysql", "sqlite3"
+            @q = "insert into #{table_name} values(null)" if _vals.empty?
+          when "postgres"
+            @q = "insert into #{table_name} default values" if _vals.empty?
+          else
+            @q = ""
+          end
+        else
+          @q = "insert into #{table_name}(#{_keys}) values(#{_vals})"
+        end
 
         res = exec
         @q = ""

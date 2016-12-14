@@ -14,9 +14,9 @@ class SampleModel < Topaz::Model
   # and String, Int64 and Float64 are supported for SQLite3
   # In this sample, we use SQLite3 as database.
   columns(
-    {name: name, type: String},
-    {name: age, type: Int64},
-    {name: score, type: Float64},
+    name: String,
+    age: Int64,
+    score: Float64,
   )
 end
 

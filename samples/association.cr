@@ -11,19 +11,19 @@ class SampleParent < Topaz::Model
   # This meant that SampleParent has multiple SampleChilds
   # You can access it as childs where parent_id of the childs equals to the id
   has_many(
-    {model: SampleChild, as: childs, key: parent_id}
+    childs: {model: SampleChild, key: parent_id}
   )
 end
 
 class SampleChild < Topaz::Model
   # Define foreign key
   columns(
-    {name: parent_id, type: Int64}
+    parent_id: Int64
   )
   # This meant that SampleChild belongs to a SampleParent
   # You can access SampleParent as parent where id of it equals to parent_id
   belongs_to(
-    {model: SampleParent, as: parent, key: parent_id}
+    parent: {model: SampleParent, key: parent_id}
   )
 end
 

@@ -7,7 +7,7 @@ end
 class AllTypes < Topaz::Model
   columns(
     type_string: String,
-    type_integer:  Int32,
+    type_integer: Int32,
     type_float: Float32,
     type_double: Float64,
   )

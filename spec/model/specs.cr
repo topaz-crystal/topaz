@@ -2,7 +2,7 @@ require "../spec_helper"
 require "./models"
 
 macro select_db(db)
-  
+
   Spec.before_each do
     Topaz::Db.setup("{{db.id}}")
     EmptyColumn.create_table

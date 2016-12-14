@@ -1,6 +1,6 @@
 require "./topaz/*"
 
 # Topaz
-# Simple and useful db wrapper inspired by active record design model
+# Simple and useful db wrapper inspired by active record design pattern
 module Topaz
 end
