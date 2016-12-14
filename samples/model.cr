@@ -3,7 +3,6 @@ require "../src/topaz"
 ################
 # Model Sample #
 ################
-
 # This is a sample for Topaz::Model using SQLite3 as db
 # You can define columns for your model as follows
 class SampleModel < Topaz::Model
