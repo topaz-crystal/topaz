@@ -25,6 +25,7 @@ dependencies:
 **1. Setup DB**
 ```crystal
 Topaz::Db.setup("mysql://root@localhost/topaz") # For MySQL
+Topaz::Db.setup("postgres://root@localhost/topaz") # For PostgreSQL
 Topaz::Db.setup("sqlite3://./db/data.db") # For SQLite3
 ```
 
@@ -32,7 +33,7 @@ Topaz::Db.setup("sqlite3://./db/data.db") # For SQLite3
 ```crystal
 class SampleModel < Topaz::Model
   columns(
-    {name: name, type: String}
+    name: String
   )
 end
 
@@ -58,14 +59,14 @@ require "topaz"
 
 class SampleParent < Topaz::Model
   columns # Empty columns
-  has_many( {model: SampleChild, as: childs, key: parent_id} )
+  has_many(childs: {model: SampleChild, key: parent_id})
 end
 
 class SampleChild < Topaz::Model
   columns( # Define foreign key
-    {name: parent_id, type: Int32}
+    parent_id: Int32
   )
-  belongs_to( {model: SampleParent, as: parent, key: parent_id} )
+  belongs_to(parent: {model: SampleParent, key: parent_id})
 end
 
 p = SampleParent.create
@@ -87,11 +88,8 @@ See [sample code](https://github.com/topaz-crystal/topaz/blob/master/samples/ass
 
 **Supported data types.**  
 
-[MySQL]  
-String, Int32, Float64, Float32
-
-[SQLite3]  
-String, Int64, Float64  
+[MySQL, PostgreSQL, SQLite3]  
+String, Int32, Float64, Float32  
 
 TODO:
 * Support DATE

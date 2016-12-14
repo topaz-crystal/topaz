@@ -1,3 +1,6 @@
+
+all: test sample
+
 test:
 	crystal spec ./spec/model/sqlite3.cr
 	crystal spec ./spec/model/mysql.cr

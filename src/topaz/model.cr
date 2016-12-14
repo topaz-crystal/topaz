@@ -4,32 +4,31 @@
 # since the calling contruct every necessary functions
 module Topaz
   class Model
-    
     getter id
 
-    macro columns(*cols)
+    macro columns(cols)
 
       {% data_exists = false %}
-      {% for c in cols %}
+      {% if cols.size > 0 %}
         {% data_exists = true %}
       {% end %}
 
         def initialize(
-              {% for c in cols %}
-                @{{c[:name].id}} : {{c[:type].id}},
+              {% for key, value in cols %}
+                @{{key.id}} : {{value.id}},
               {% end %}@q = "", @id = -1)
         end
 
       protected def initialize(
                       @id : Int32,
-                      {% for c in cols %}
-                        @{{c[:name].id}} : {{c[:type].id}},
+                      {% for key, value in cols %}
+                        @{{key.id}} : {{value.id}},
                       {% end %}@q = "")
       end
 
       protected def initialize
-        {% for c in cols %}
-          @{{c[:name].id}} = nil
+        {% for key, value in cols %}
+          @{{key.id}} = nil
         {% end %}
           @id = -1
         @q = ""
@@ -123,8 +122,8 @@ module Topaz
       end
 
       def update
-        {% if cols.size > 0 && data_exists %}
-          data = { {% for c in cols %}{{c[:name].id}}: @{{c[:name].id}},{% end %} }
+        {% if data_exists %}
+          data = { {% for key, value in cols %}{{key.id}}: @{{key.id}},{% end %} }
           update(data)
         {% end %}
       end
@@ -143,16 +142,16 @@ module Topaz
               set.push(
                 typeof(self).new(
                 res.read(Int32), # id
-                {% for c in cols %}
-                  res.read({{c[:type].id}}),
+                {% for key, value in cols %}
+                  res.read({{value.id}}),
                 {% end %}
               ))
             when "sqlite3"
               set.push(
                 typeof(self).new(
                 res.read(Int64).to_i32, # id
-                {% for c in cols %}
-                  res.read({{c[:type].id}}),
+                {% for key, value in cols %}
+                  res.read({{value.id}}),
                 {% end %}
               ))
             end
@@ -161,8 +160,8 @@ module Topaz
         end
       end
 
-      def self.create({% for c in cols %}{{c[:name].id}} : {{c[:type].id}},{% end %})
-        model = new({% for c in cols %}{{c[:name].id}},{% end %})
+      def self.create({% for key, value in cols %}{{key.id}} : {{value.id}},{% end %})
+        model = new({% for key, value in cols %}{{key.id}},{% end %})
         res = model.save
         model
       end
@@ -172,17 +171,17 @@ module Topaz
         keys = [] of String
         vals = [] of String
 
-        {% for c in cols %}
-          keys.push("{{c[:name].id}}") unless @{{c[:name].id}}.nil?
-          vals.push("'#{@{{c[:name].id}}}'") unless @{{c[:name].id}}.nil?
+        {% for key, value in cols %}
+          keys.push("{{key.id}}") unless @{{key.id}}.nil?
+          vals.push("'#{@{{key.id}}}'") unless @{{key.id}}.nil?
         {% end %}
 
-          _keys = keys.join(", ")
+        _keys = keys.join(", ")
         _vals = vals.join(", ")
 
         @q = "insert into #{table_name} values(null)" if _vals.empty?
         @q = "insert into #{table_name}(#{_keys}) values(#{_vals})" unless _vals.empty?
-        
+
         res = exec
         @q = ""
         @id = res.last_insert_id.to_i32
@@ -194,14 +193,14 @@ module Topaz
       def to_a
         [
           ["id", @id],
-          {% for c in cols %}["{{c[:name].id}}", @{{c[:name].id}}],{% end %}
+          {% for key, value in cols %}["{{key.id}}", @{{key.id}}],{% end %}
         ]
       end
 
       def to_h
         {
           "id" => @id,
-          {% for c in cols %}"{{c[:name].id}}" => @{{c[:name].id}},{% end %}
+          {% for key, value in cols %}"{{key.id}}" => @{{key.id}},{% end %}
         }
       end
 
@@ -209,11 +208,11 @@ module Topaz
 
         case Topaz::Db.scheme
         when "mysql"
-          query = "create table if not exists #{table_name}(id int auto_increment,{% for c in cols %}{{c[:name].id}} #{get_type({{c[:type].id}})}{% if !c[:primary].nil? && c[:primary] %} primary key{% end %},{% end %}index(id))"
+          query = "create table if not exists #{table_name}(id int auto_increment,{% for key, value in cols %}{{key.id}} #{get_type({{value.id}})},{% end %}index(id))"
         when "postgres"
-          query = "create table if not exists #{table_name}(id serial,{% for c, i in cols %}{{c[:name].id}} #{get_type({{c[:type].id}})}{% if !c[:primary].nil? && c[:primary] %} primary key{% end %}{% if i != cols.size-1 %},{% end %}{% end %})"
+          query = "create table if not exists #{table_name}(id serial{% for key, value in cols %},{{key.id}} #{get_type({{value.id}})}{% end %})"
         when "sqlite3"
-          query = "create table if not exists #{table_name}(id integer primary key{% for c, i in cols %}{% if data_exists %}, {{c[:name].id}} #{get_type({{c[:type].id}})}{% if !c[:primary].nil? && c[:primary] %} primary key{% end %}{% end %}{% end %})"
+          query = "create table if not exists #{table_name}(id integer primary key{% for key, value in cols %},{{key.id}} #{get_type({{value.id}})}{% end %})"
         else
           query = ""
         end
@@ -263,18 +262,18 @@ module Topaz
         when "Float32"
           return "float" if Topaz::Db.scheme == "mysql" || Topaz::Db.scheme == "sqlite3"
           return "real" if Topaz::Db.scheme ==  "postgres"
-        when "Float64" 
+        when "Float64"
           return "double" if Topaz::Db.scheme == "mysql" || Topaz::Db.scheme == "sqlite3"
           return "double precision" if Topaz::Db.scheme == "postgres"
         end
       end
 
-      protected def set_value_of(key : String, value : DB::Any)
-        {% if cols.size > 0 && data_exists %}
-          case key
-              {% for c in cols %}
-              when "{{c[:name].id}}"
-                @{{c[:name].id}} = value
+      protected def set_value_of(_key : String, _value : DB::Any)
+        {% if data_exists %}
+          case _key
+              {% for key, value in cols %}
+              when "{{key.id}}"
+                @{{key.id}} = _value
               {% end %}
           end
         {% end %}
@@ -350,47 +349,62 @@ module Topaz
         end
       end
 
-      {% for c in cols %}
-        def {{c[:name].id}}=(@{{c[:name].id}} : {{c[:type].id}})
+      {% for key, value in cols %}
+        def {{key.id}}=(@{{key.id}} : {{value.id}})
         end
 
-        def {{c[:name].id}} : {{c[:type].id}}
-          return @{{c[:name].id}}.as({{c[:type].id}})
+        def {{key.id}} : {{value.id}}
+          return @{{key.id}}.as({{value.id}})
         end
 
       {% end %}
     end
 
-    macro has_many(*models)
-      {% for m in models %}
-        def {{m[:as].id}}
-          {{m[:model].id}}.where("{{m[:key].id}} = #{@id}").select
+    macro columns(**cols)
+      {% if cols.size > 0 %}
+        columns({{cols}})
+      {% else %}
+      columns({} of Symbol => String)
+      {% end %}
+    end
+
+    macro has_many(models)
+      {% for key, value in models %}
+        def {{key.id}}
+          {{value[:model].id}}.where("{{value[:key].id}} = #{@id}").select
         end
       {% end %}
 
         def elements(ms : Symbol|String)
           {% if models.size > 0 %}
             case ms
-                {% for m in models %}
-                when :{{m[:as].id}}, "{{m[:as].id}}"
-                  return {{m[:as].id}}
+                {% for key, value in models %}
+                when :{{key.id}}, "{{key.id}}"
+                  return {{key.id}}
                 {% end %}
             end
           {% end %}
-            raise "No such elements #{ms} in #{typeof(self)}"
         end
     end
 
-    def elements(dummy : Symbol|String)
+    macro has_many(**models)
+      has_many({{models}})
+    end
+
+    def elements(dummy : Symbol | String)
       raise "dummy elements has benn called."
     end
 
-    macro belongs_to(*models)
-      {% for m in models %}
-        def {{m[:as].id}}
-          {{m[:model].id}}.find({{m[:key].id}})
+    macro belongs_to(models)
+      {% for key, value in models %}
+        def {{key.id}}
+          {{value[:model].id}}.find({{value[:key].id}})
         end
       {% end %}
+    end
+
+    macro belongs_to(**models)
+      belongs_to({{models}})
     end
   end
 end

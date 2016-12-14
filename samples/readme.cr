@@ -9,7 +9,7 @@ end
 
 class SampleChild < Topaz::Model
   columns( # Define foreign key
-    {name: parent_id, type: Int32}
+{name: parent_id, type: Int32}
   )
   belongs_to({model: SampleParent, as: parent, key: parent_id})
 end
