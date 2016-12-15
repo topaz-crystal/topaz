@@ -1,2 +1,2 @@
-require "./specs"
+require "./specs_for_models"
 select_db("sqlite3://./db/sample.db")

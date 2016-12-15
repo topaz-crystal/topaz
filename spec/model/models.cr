@@ -13,7 +13,21 @@ class AllTypes < Topaz::Model
   )
 end
 
-class MockModel < Topaz::Model
+class SearchedModel < Topaz::Model
+  columns(
+    name: String,
+    age: Int32,
+  )
+end
+
+class UpdatedModel < Topaz::Model
+  columns(
+    name: String,
+    age: Int32,
+  )
+end
+
+class DeletedModel < Topaz::Model
   columns(
     name: String,
     age: Int32,
