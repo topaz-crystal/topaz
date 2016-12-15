@@ -2,6 +2,7 @@
 all: test sample
 
 test:
+	crystal spec
 	crystal spec ./spec/model/sqlite3.cr
 	crystal spec ./spec/model/mysql.cr
 	crystal spec ./spec/model/pg.cr

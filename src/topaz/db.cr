@@ -24,6 +24,7 @@ module Topaz
     def self.close
       check
       @@shared.as(DB::Database).close
+      @@shared = nil
     end
 
     protected def self.scheme
