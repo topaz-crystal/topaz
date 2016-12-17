@@ -105,5 +105,61 @@ macro select_db(db)
       p.json({include: {childlen: {except: [:id, :p_id]}, pets: nil}}).should eq "{\"id\": 1, \"name\": \"John\", \"childlen\": [{\"age\": 12}, {\"age\": 15}, {\"age\": 23}], \"pets\": [{\"id\": 1, \"p_id\": 1}, {\"id\": 2, \"p_id\": 1}, {\"id\": 3, \"p_id\": 1}, {\"id\": 4, \"p_id\": 1}]}"
       p.json({include: {childlen: {include: {toies: {include: :parts, only: :price}}}, pets: nil}}).should eq "{\"id\": 1, \"name\": \"John\", \"childlen\": [{\"id\": 1, \"age\": 12, \"p_id\": 1, \"toies\": [{\"price\": 10, \"parts\": [{\"id\": 1, \"t_id\": 1}]}, {\"price\": 12, \"parts\": []}]}, {\"id\": 2, \"age\": 15, \"p_id\": 1, \"toies\": [{\"price\": 15, \"parts\": [{\"id\": 2, \"t_id\": 3}, {\"id\": 3, \"t_id\": 3}, {\"id\": 4, \"t_id\": 3}]}]}, {\"id\": 3, \"age\": 23, \"p_id\": 1, \"toies\": []}], \"pets\": [{\"id\": 1, \"p_id\": 1}, {\"id\": 2, \"p_id\": 1}, {\"id\": 3, \"p_id\": 1}, {\"id\": 4, \"p_id\": 1}]}"
     end
+
+    it "Create in transaction" do
+      TransactionModel.drop_table
+      TransactionModel.create_table
+      
+      Topaz::Db.shared.transaction do |tx|
+        TransactionModel.in(tx).select.size.should eq(0)
+        t0 = TransactionModel.in(tx).create("name0")
+        t1 = TransactionModel.new("name1").in(tx).save
+        t0.name.should eq("name0")
+        t1.name.should eq("name1")
+        TransactionModel.in(tx).select.size.should eq(2)
+      end
+
+      TransactionModel.select.size.should eq(2)
+    end
+
+    it "Update in transaction" do
+      TransactionModel.drop_table
+      TransactionModel.create_table
+
+      Topaz::Db.shared.transaction do |tx|
+        5.times do |i|
+          TransactionModel.in(tx).create("name#{i}")
+        end
+        t0 = TransactionModel.in(tx).find(1)
+        t0.name.should eq("name0")
+        t0.name = "name0 updated"
+        t0.in(tx).update
+        TransactionModel.in(tx).find(1).name.should eq("name0 updated")
+        TransactionModel.in(tx).find(2).name.should eq("name1")
+        TransactionModel.in(tx).update(name: "all updated")
+        TransactionModel.in(tx).select.each do |tm|
+          tm.name.should eq("all updated")
+        end
+      end
+    end
+
+    it "Delete in transaction" do
+      TransactionModel.drop_table
+      TransactionModel.create_table
+
+      Topaz::Db.shared.transaction do |tx|
+        5.times do |i|
+          TransactionModel.in(tx).create("name#{i}")
+        end
+        TransactionModel.in(tx).select.size.should eq(5)
+        t0 = TransactionModel.in(tx).find(1)
+        t0.in(tx).delete
+        TransactionModel.in(tx).select.size.should eq(4)
+        TransactionModel.in(tx).delete
+        TransactionModel.in(tx).select.size.should eq(0)
+      end
+    end
   end
 end
+
+

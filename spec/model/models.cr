@@ -70,3 +70,7 @@ class JsonPart < Topaz::Model
   columns(t_id: Int32)
   belongs_to(toy: {model: JsonToy, key: t_id})
 end
+
+class TransactionModel < Topaz::Model
+  columns(name: String)
+end

@@ -1,5 +1,9 @@
 require "../src/topaz"
 
+###############
+# Json Sample #
+###############
+
 # In this sample, we have
 # JsonParent
 #  - JsonChild

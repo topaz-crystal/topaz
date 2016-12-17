@@ -6,48 +6,49 @@ module Topaz
   class Model
     getter id
 
-    macro columns(cols)
+    @id : Int32  = -1
+    @q  : String = ""
+    @tx : DB::Transaction|Nil = nil
 
-      def initialize(
-            {% for key, value in cols %}
-              @{{key.id}} : {{value.id}},
-            {% end %}@q = "", @id = -1)
+    macro columns(cols)
+      
+      def initialize({% for key, value in cols %}@{{key.id}} : {{value.id}},{% end %})
       end
 
-      protected def initialize(
-                      @id : Int32,
-                      {% for key, value in cols %}
-                        @{{key.id}} : {{value.id}},
-                      {% end %}@q = "")
+      protected def initialize(@id : Int32,{% for key, value in cols %}
+                                             @{{key.id}} : {{value.id}},
+                                           {% end %})
       end
 
       protected def initialize
         {% for key, value in cols %}
           @{{key.id}} = nil
         {% end %}
-          @id = -1
-        @q = ""
       end
 
-      def query(q)
+      protected def set_query(q)
         @q = q
         self
       end
+      
+      def self.in(tx : DB::Transaction)
+        new.in(tx)
+      end
 
       def self.find(id)
-        new.query("where id = #{id}").select.first
+        new.set_query("where id = #{id}").select.first
       end
 
       def self.where(q : String)
-        new.query("where #{q} ")
+        new.set_query("where #{q} ")
       end
 
       def self.order(column : String, sort = "asc")
-        new.query("order by #{column} #{sort} ")
+        new.set_query("order by #{column} #{sort} ")
       end
 
       def self.range(offset : Int, limit : Int)
-        new.query("limit #{limit} offset #{offset} ")
+        new.set_query("limit #{limit} offset #{offset} ")
       end
 
       def self.select
@@ -62,8 +63,15 @@ module Topaz
         new.delete
       end
 
-      def self.join(model, column : String, foreign_key : String)
-        new.query("join #{model.table_name} on #{table_name}.#{foreign_key}=#{model.table_name}.#{column} ")
+      def in(tx : DB::Transaction)
+        @tx = tx
+        self
+      end
+
+      def find(id)
+        model = typeof(self).new
+        model.in(@tx.as(DB::Transaction)) unless @tx.nil?
+        model.set_query("where id = #{id}").select.first
       end
 
       def where(q : String)
@@ -127,39 +135,56 @@ module Topaz
       end
 
       def select
-
         @q = "select * from #{table_name} #{@q}"
-        Topaz::Log.q @q
+        Topaz::Log.q @q, @tx
+
+        res = read_result(Topaz::Db.shared) if @tx.nil?
+        res = read_result(@tx.as(DB::Transaction).connection) unless @tx.nil?
+
+        raise "Failed to read data from database" if res.nil?
+
+        res.as(Set)
+      end
+
+      protected def read_result(db : DB::Database|DB::Connection)
 
         set = Set.new
-
-        Topaz::Db.shared.query(@q) do |res|
-          res.each do
+        
+        db.query(@q) do |rows|
+          rows.each do
             case Topaz::Db.scheme
             when "mysql", "postgres"
               set.push(
                 typeof(self).new(
-                res.read(Int32), # id
+                rows.read(Int32), # id
                 {% for key, value in cols %}
-                  res.read({{value.id}}),
+                  rows.read({{value.id}}),
                 {% end %}
               ))
             when "sqlite3"
               set.push(
                 typeof(self).new(
-                res.read(Int64).to_i32, # id
+                rows.read(Int64).to_i32, # id
                 {% for key, value in cols %}
-                  res.read({{value.id}}),
+                  rows.read({{value.id}}),
                 {% end %}
               ))
             end
           end
-          set
         end
+
+        set
       end
 
       def self.create({% for key, value in cols %}{{key.id}} : {{value.id}},{% end %})
         model = new({% for key, value in cols %}{{key.id}},{% end %})
+        res = model.save
+        model
+      end
+
+      def create({% for key, value in cols %}{{key.id}} : {{value.id}},{% end %})
+        model = typeof(self).new({% for key, value in cols %}{{key.id}},{% end %})
+        model.in(@tx.as(DB::Transaction)) unless @tx.nil?
         res = model.save
         model
       end
@@ -174,7 +199,7 @@ module Topaz
           vals.push("'#{@{{key.id}}}'") unless @{{key.id}}.nil?
         {% end %}
 
-        _keys = keys.join(", ")
+          _keys = keys.join(", ")
         _vals = vals.join(", ")
 
         if _vals.empty?
@@ -191,10 +216,13 @@ module Topaz
         end
 
         res = exec
-        @q = ""
         @id = res.last_insert_id.to_i32
-        # Note: Currently will/crystal-pg is not support last_insert_id.to_i32
-        @id = typeof(self).select.last.id if @id == 0
+        # Note: Currently will/crystal-pg doesn't support last_insert_id.to_i32
+        if @id == 0 && Topaz::Db.scheme == "postgres"
+          @id = typeof(self).select.last.id if @tx.nil?
+          @id = typeof(self).in(@tx.as(DB::Transaction)).select.last.id unless @tx.nil?
+        end
+        @q = ""
         self
       end
 
@@ -216,30 +244,33 @@ module Topaz
 
         case Topaz::Db.scheme
         when "mysql"
-          query = "create table if not exists #{table_name}(id int auto_increment,{% for key, value in cols %}{{key.id}} #{get_type({{value.id}})},{% end %}index(id))"
+          q = "create table if not exists #{table_name}(id int auto_increment,{% for key, value in cols %}{{key.id}} #{get_type({{value.id}})},{% end %}index(id))"
         when "postgres"
-          query = "create table if not exists #{table_name}(id serial{% for key, value in cols %},{{key.id}} #{get_type({{value.id}})}{% end %})"
+          q = "create table if not exists #{table_name}(id serial{% for key, value in cols %},{{key.id}} #{get_type({{value.id}})}{% end %})"
         when "sqlite3"
-          query = "create table if not exists #{table_name}(id integer primary key{% for key, value in cols %},{{key.id}} #{get_type({{value.id}})}{% end %})"
+          q = "create table if not exists #{table_name}(id integer primary key{% for key, value in cols %},{{key.id}} #{get_type({{value.id}})}{% end %})"
         else
-          query = ""
+          q = ""
         end
 
-        exec query
+        exec q
       end
 
       def self.drop_table
-        query = "drop table if exists #{table_name}"
-        exec query
-      end
-
-      def exec
-        Topaz::Log.q @q
-        Topaz::Db.shared.exec @q
+        q = "drop table if exists #{table_name}"
+        exec q
       end
 
       protected def self.exec(q)
-        new.query(q).exec
+        new.set_query(q).exec
+      end
+
+      protected def exec
+        Topaz::Log.q @q, @tx
+        res = Topaz::Db.shared.exec @q if @tx.nil?
+        res = @tx.as(DB::Transaction).connection.exec @q unless @tx.nil?
+        raise "Failed to execute \'#{@q}\'" if res.nil?
+        res.as(DB::ExecResult)
       end
 
       protected def self.downcase
@@ -279,10 +310,10 @@ module Topaz
       protected def set_value_of(_key : String, _value : DB::Any)
         {% if cols.size > 0 %}
           case _key
-              {% for key, value in cols %}
-              when "{{key.id}}"
-                @{{key.id}} = _value
-              {% end %}
+               {% for key, value in cols %}
+               when "{{key.id}}"
+                 @{{key.id}} = _value
+               {% end %}
           end
         {% end %}
       end
@@ -400,7 +431,7 @@ module Topaz
     end
 
     def elements(dummy : Symbol | String)
-      raise "dummy elements has benn called."
+      raise "dummy elements has been called."
     end
 
     macro belongs_to(models)

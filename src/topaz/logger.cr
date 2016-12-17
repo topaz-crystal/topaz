@@ -65,14 +65,15 @@ module Topaz
       @log.warn("\e[33m[Topaz -- Warning] #{msg}\e[m") if @debug_mode
     end
 
-    def self.q(msg : String)
+    def self.q(msg : String, tx = nil)
       log = Topaz::Log.get_instance
-      log.q(msg)
+      log.q(msg, tx)
     end
 
-    def q(msg : String)
+    def q(msg : String, tx = nil)
       @log.level = Logger::Severity::DEBUG if @show_query && @log.level != Logger::Severity::DEBUG
-      @log.debug("\e[33m[Topaz query] #{msg}\e[m") if @show_query
+      @log.debug("\e[33m[Topaz query] #{msg}\e[m") if @show_query && tx.nil?
+      @log.debug("\e[33m[Topaz query] #{msg} | In transaction\e[m") if @show_query && !tx.nil?
     end
   end
 end

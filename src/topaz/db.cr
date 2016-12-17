@@ -20,6 +20,11 @@ module Topaz
       @@shared = DB.open(uri)
     end
 
+    def self.shared
+      check
+      @@shared.as(DB::Database)
+    end
+
     # Close the database
     def self.close
       check
@@ -30,11 +35,6 @@ module Topaz
     protected def self.scheme
       check
       @@shared.as(DB::Database).uri.scheme
-    end
-
-    protected def self.shared
-      check
-      @@shared.as(DB::Database)
     end
 
     protected def self.check
