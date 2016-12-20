@@ -7,11 +7,8 @@ require "../src/topaz"
 # This is a sample for Topaz::Model using SQLite3 as db
 # You can define columns for your model as follows
 class SampleModel < Topaz::Model
-  # Basically, each column needs 'name' and 'type' keys.
-  # 'name' key is a column name which is accessible from code
-  # 'type' key is a column type for defined column.
-  # Currently, String, Int32, Float32 and Float64 are supported for MySQL
-  # and String, Int64 and Float64 are supported for SQLite3
+  # Basically, each column needs 'name' and 'type'.
+  # Currently, String, Int32, Float32 and Float64 are supported
   # In this sample, we use SQLite3 as database.
   columns(
     name: String,

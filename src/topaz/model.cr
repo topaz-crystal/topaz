@@ -7,8 +7,8 @@ module Topaz
     getter id
 
     @id : Int32  = -1
-    @q  : String = ""
-    @tx : DB::Transaction|Nil = nil
+    @q  : String?
+    @tx : DB::Transaction?
 
     macro columns(cols)
       
@@ -136,7 +136,7 @@ module Topaz
 
       def select
         @q = "select * from #{table_name} #{@q}"
-        Topaz::Log.q @q, @tx
+        Topaz::Log.q @q.as(String), @tx unless @q.nil?
 
         res = read_result(Topaz::Db.shared) if @tx.nil?
         res = read_result(@tx.as(DB::Transaction).connection) unless @tx.nil?
@@ -150,7 +150,7 @@ module Topaz
 
         set = Set.new
         
-        db.query(@q) do |rows|
+        db.query(@q.as(String)) do |rows|
           rows.each do
             case Topaz::Db.scheme
             when "mysql", "postgres"
@@ -171,7 +171,7 @@ module Topaz
               ))
             end
           end
-        end
+        end unless @q.nil?
 
         set
       end
@@ -266,9 +266,9 @@ module Topaz
       end
 
       protected def exec
-        Topaz::Log.q @q, @tx
-        res = Topaz::Db.shared.exec @q if @tx.nil?
-        res = @tx.as(DB::Transaction).connection.exec @q unless @tx.nil?
+        Topaz::Log.q @q.as(String), @tx unless @q.nil?
+        res = Topaz::Db.shared.exec @q.as(String) if @tx.nil? && !@q.nil?
+        res = @tx.as(DB::Transaction).connection.exec @q.as(String) unless @tx.nil? && !@q.nil?
         raise "Failed to execute \'#{@q}\'" if res.nil?
         res.as(DB::ExecResult)
       end

@@ -89,7 +89,7 @@ See [sample code](https://github.com/topaz-crystal/topaz/blob/master/samples/ass
 **Supported data types.**  
 
 [MySQL, PostgreSQL, SQLite3]  
-String, Int32, Float64, Float32  
+String, Int32, Int64, Float32, Float64  
 
 TODO:
 * Support DATE

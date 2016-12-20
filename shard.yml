@@ -13,6 +13,6 @@ dependencies:
     github: crystal-lang/crystal-sqlite3
   pg:
     github: will/crystal-pg
-    commit: dab71f888ccf2338e8ee68a6ae021acd8ed8bbd5
+    branch: master
   singleton:
     github: topaz-crystal/crystal-singleton

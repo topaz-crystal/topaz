@@ -5,12 +5,13 @@ require "pg"
 
 module Topaz
   class Db
-    @@shared : DB::Database | Nil
+    @@shared : DB::Database?
 
     # Setup a database by connection uri as String
     # See official sample for detail
     # For MySQL https://github.com/crystal-lang/crystal-mysql
     # For SQLite3 https://github.com/crystal-lang/crystal-sqlite3
+    # For PostgreSQL https://github.com/will/crystal-pg
     def self.setup(connection : String)
       setup(URI.parse(connection))
     end
