@@ -4,6 +4,8 @@ version: 0.2.1
 authors:
   - Taichiro Suzuki <taichiro0709@gmail.com>
 
+crystal: 0.20.1
+
 license: MIT
 
 dependencies:
