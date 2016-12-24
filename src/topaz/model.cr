@@ -12,12 +12,15 @@ module Topaz
 
     macro columns(cols)
       
-      def initialize({% for key, value in cols %}@{{key.id}} : {{value.id}},{% end %})
+      def initialize({% for key, value in cols %}
+                       @{{key.id}} : {{value.id}},
+                     {% end %})
       end
 
-      protected def initialize(@id : Int32,{% for key, value in cols %}
-                                             @{{key.id}} : {{value.id}},
-                                           {% end %})
+      protected def initialize(@id : Int32,
+                               {% for key, value in cols %}
+                                 @{{key.id}} : {{value.id}},
+                               {% end %})
       end
 
       protected def initialize
@@ -198,10 +201,10 @@ module Topaz
           keys.push("{{key.id}}") unless @{{key.id}}.nil?
           vals.push("'#{@{{key.id}}}'") unless @{{key.id}}.nil?
         {% end %}
-
+          
           _keys = keys.join(", ")
         _vals = vals.join(", ")
-
+        
         if _vals.empty?
           case Topaz::Db.scheme
           when "mysql", "sqlite3"
@@ -304,6 +307,10 @@ module Topaz
         when "Float64"
           return "double" if Topaz::Db.scheme == "mysql" || Topaz::Db.scheme == "sqlite3"
           return "double precision" if Topaz::Db.scheme == "postgres"
+        when "Bool"
+          return "boolean"
+        when "Time"
+          return "datetime"
         end
       end
 

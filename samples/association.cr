@@ -9,9 +9,9 @@ require "../src/topaz"
 class SampleParent < Topaz::Model
   columns # Empty columns
   # This meant that SampleParent has multiple SampleChilds
-  # You can access it as childs where parent_id of the childs equals to the id
+  # You can access it as childlen where parent_id of the childlen equals to the id
   has_many(
-    childs: {model: SampleChild, key: parent_id}
+    childlen: {model: SampleChild, key: parent_id}
   )
 end
 
@@ -43,15 +43,15 @@ SampleChild.create_table
 # Let me create a parent
 p = SampleParent.create
 
-# Here we create 3 childs belong to the parent
+# Here we create 3 childlen belong to the parent
 child1 = SampleChild.create(p.id.to_i64)
 child2 = SampleChild.create(p.id.to_i64)
 child3 = SampleChild.create(p.id.to_i64)
 
-# Select all childs
-p.childs.size
+# Select all childlen
+p.childlen.size
 # => 3
-p.childs.first.id
+p.childlen.first.id
 # => 1
 
 # Find a parent

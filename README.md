@@ -4,6 +4,8 @@
 [![Dependency Status](https://shards.rocks/badge/github/topaz-crystal/topaz/status.svg)](https://shards.rocks/github/topaz-crystal/topaz)
 [![devDependency Status](https://shards.rocks/badge/github/topaz-crystal/topaz/dev_status.svg)](https://shards.rocks/github/topaz-crystal/topaz)
 
+** If you need light data mapping model, check [db_model](https://github.com/tbrand/db_model) **
+
 Topaz is a simple and useful db wrapper for crystal lang.
 Topaz is inspired by active record design pattern, but not fully implemented.
 See [sample code](https://github.com/topaz-crystal/topaz/blob/master/samples) for detail.
@@ -59,7 +61,7 @@ require "topaz"
 
 class SampleParent < Topaz::Model
   columns # Empty columns
-  has_many(childs: {model: SampleChild, key: parent_id})
+  has_many(childlen: {model: SampleChild, key: parent_id})
 end
 
 class SampleChild < Topaz::Model
@@ -75,14 +77,14 @@ child1 = SampleChild.create(p.id)
 child2 = SampleChild.create(p.id)
 child3 = SampleChild.create(p.id)
 
-p.childs.size
+p.childlen.size
 # => 3
 
 child1.parent.id
 # => 1
 
-p.json({include: :childs})
-# => {"id": 1, "childs": [{"id": 1, "parent_id": 1}, {"id": 2, "parent_id": 1}, {"id": 3, "parent_id": 1}]}
+p.json({include: :childlen})
+# => {"id": 1, "childlen": [{"id": 1, "parent_id": 1}, {"id": 2, "parent_id": 1}, {"id": 3, "parent_id": 1}]}
 ```
 See [sample code](https://github.com/topaz-crystal/topaz/blob/master/samples/association.cr) for detail.  
 
