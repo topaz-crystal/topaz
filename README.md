@@ -4,7 +4,7 @@
 [![Dependency Status](https://shards.rocks/badge/github/topaz-crystal/topaz/status.svg)](https://shards.rocks/github/topaz-crystal/topaz)
 [![devDependency Status](https://shards.rocks/badge/github/topaz-crystal/topaz/dev_status.svg)](https://shards.rocks/github/topaz-crystal/topaz)
 
-** If you need light data mapping model, check [db_model](https://github.com/tbrand/db_model) **
+**If you need light data mapping model, check [db_model](https://github.com/tbrand/db_model)**
 
 Topaz is a simple and useful db wrapper for crystal lang.
 Topaz is inspired by active record design pattern, but not fully implemented.
