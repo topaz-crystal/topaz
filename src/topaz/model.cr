@@ -1,21 +1,33 @@
 require "json"
+
 # This is a main wrapper class for Topaz models.
 # Any class extending Topaz::Model can be transparent models for any databases.
 # The model have to call `columns` macro even if you don't have any columns
 # since the calling contruct every necessary functions
 module Topaz
   class Model
-    getter id
+    TIME_FORMAT = "%F %T:%L %z"
+    getter created_at : Time | Nil
+    getter updated_at : Time | Nil
 
-    @id : Int32  = -1
-    @q  : String?
+    @id = -1
+    @q : String?
     @tx : DB::Transaction?
 
-    getter created_at : Time|Nil
-    getter updated_at : Time|Nil
-
     macro columns(cols)
-      
+
+      JSON.mapping(
+        id: Int32,
+        {% for key, value in cols %}
+          {% if value.is_a?(NamedTupleLiteral) %}
+            {{key}}: {{value[:type]}}|Nil,
+          {% else %}
+            {{key}}: {{value.id}}|Nil,
+          {% end %}
+        {% end %}
+        created_at: Time|Nil,
+        updated_at: Time|Nil)
+
       def initialize({% for key, value in cols %}
                        {% if value.is_a?(NamedTupleLiteral) %}
                          {% if value[:nullable] %}
@@ -40,7 +52,9 @@ module Topaz
                                  {% else %}
                                    @{{key.id}} : {{value.id}},
                                  {% end %}
-                               {% end %})
+                               {% end %}created_at : String, updated_at : String)
+        @created_at = Time.parse(created_at, TIME_FORMAT)
+        @updated_at = Time.parse(updated_at, TIME_FORMAT)
       end
 
       protected def initialize
@@ -53,7 +67,7 @@ module Topaz
         @q = q
         self
       end
-      
+
       def self.in(tx : DB::Transaction)
         new.in(tx)
       end
@@ -135,45 +149,55 @@ module Topaz
 
         updated = ""
 
+        time = Time.now
+
         if data.keys.size == 0
           {% for key, value, idx in cols %}
             {% if value.is_a?(NamedTupleLiteral) %}
               {% if value[:nullable] %}
-                updated += "{{key}} = \'#{@{{key}}}\'" unless @{{key}}.nil?
-                updated += "{{key}} = null" if @{{key}}.nil?
-                {% if idx != cols.size - 1 %}
-                  updated += ", "
-                {% end %}
+                updated += "{{key}} = \'#{@{{key}}}\', " unless @{{key}}.nil?
+                updated += "{{key}} = null, " if @{{key}}.nil?
               {% else %}
-                updated += "{{key}} = \'#{@{{key}}}\'" unless @{{key}}.nil?
-                {% if idx != cols.size - 1 %}
-                  updated += ", "
-                {% end %}
+                updated += "{{key}} = \'#{@{{key}}}\', " unless @{{key}}.nil?
               {% end %}
             {% else %}
-              updated += "{{key}} = \'#{@{{key}}}\'" unless @{{key}}.nil?
-              {% if idx != cols.size - 1 %}
-                updated += ", "
-              {% end %}
+              updated += "{{key}} = \'#{@{{key}}}\', " unless @{{key}}.nil?
             {% end %}
           {% end %}
         else
           data.each_with_index do |key, value, idx|
             unless value.nil?
-              updated += "#{key} = \'#{value}\'"
-              updated += ", " if idx != data.size-1
+              updated += "#{key} = \'#{value}\', "
               set_value_of(key.to_s, value) unless @id == -1
             else
-              updated += "#{key} = null"
-              updated += ", " if idx != data.size-1
+              updated += "#{key} = null, "
               set_value_of(key.to_s, value) unless @id == -1
             end
           end
         end
 
+        updated += "updated_at = \'#{time.to_s(TIME_FORMAT)}\'"
+
+        @updated_at = time
+
         @q = "update #{table_name} set #{updated} #{@q}"
         exec
         @q = ""
+      end
+
+      protected def set_value_of(_key : String, _value : DB::Any)
+        {% if cols.size > 0 %}
+          case _key
+            {% for key, value in cols %}
+            when "{{key.id}}"
+              {% if value.is_a?(NamedTupleLiteral) %}
+                @{{key.id}} = _value if _value.is_a?({{value[:type]}})
+              {% else %}
+                @{{key.id}} = _value if _value.is_a?({{value.id}})
+              {% end %}
+            {% end %}
+          end
+        {% end %}
       end
 
       def select
@@ -191,7 +215,7 @@ module Topaz
       protected def read_result(db : DB::Database|DB::Connection)
 
         set = Set.new
-        
+
         db.query(@q.as(String)) do |rows|
           rows.each do
             case Topaz::Db.scheme
@@ -210,6 +234,8 @@ module Topaz
                     rows.read({{value.id}}),
                   {% end %}
                 {% end %}
+                rows.read(String),
+                rows.read(String)
               ))
             when "sqlite3"
               set.push(
@@ -226,6 +252,8 @@ module Topaz
                     rows.read({{value.id}}),
                   {% end %}
                 {% end %}
+                rows.read(String),
+                rows.read(String)
               ))
             end
           end
@@ -291,31 +319,33 @@ module Topaz
             vals.push("'#{@{{key.id}}}'") unless @{{key.id}}.nil?
           {% end %}
         {% end %}
-          
+
+        time = Time.now
+
+        keys.push("created_at")
+        keys.push("updated_at")
+        vals.push("\'#{time.to_s(TIME_FORMAT)}\'")
+        vals.push("\'#{time.to_s(TIME_FORMAT)}\'")
+
         _keys = keys.join(", ")
         _vals = vals.join(", ")
-        
-        if _vals.empty?
-          case Topaz::Db.scheme
-          when "mysql", "sqlite3"
-            @q = "insert into #{table_name} values(null)" if _vals.empty?
-          when "postgres"
-            @q = "insert into #{table_name} default values" if _vals.empty?
-          else
-            @q = ""
-          end
-        else
-          @q = "insert into #{table_name}(#{_keys}) values(#{_vals})"
-        end
+
+        @q = "insert into #{table_name}(#{_keys}) values(#{_vals})"
 
         res = exec
+
         @id = res.last_insert_id.to_i32
         # Note: Currently will/crystal-pg doesn't support last_insert_id.to_i32
         if @id == 0 && Topaz::Db.scheme == "postgres"
           @id = typeof(self).select.last.id if @tx.nil?
           @id = typeof(self).in(@tx.as(DB::Transaction)).select.last.id unless @tx.nil?
         end
+
+        @created_at = time
+        @updated_at = time
+
         @q = ""
+
         self
       end
 
@@ -323,6 +353,8 @@ module Topaz
         [
           ["id", @id],
           {% for key, value in cols %}["{{key.id}}", @{{key.id}}],{% end %}
+          ["created_at", "#{@created_at}"],
+          ["updated_at", "#{@updated_at}"],
         ]
       end
 
@@ -330,14 +362,18 @@ module Topaz
         {
           "id" => @id,
           {% for key, value in cols %}"{{key.id}}" => @{{key.id}},{% end %}
+          "created_at" => "#{@created_at}",
+          "updated_at" => "#{@updated_at}",
         }
       end
 
       def self.create_table
 
+        q = ""
+
         case Topaz::Db.scheme
         when "mysql"
-          q = <<-QUERY
+          q =  <<-QUERY
           create table if not exists #{table_name}(id int auto_increment,
           {% for key, value in cols %}
           {% if value.is_a?(NamedTupleLiteral) %}
@@ -349,11 +385,13 @@ module Topaz
           {% end %},
           {% else %}
           {{key.id}} #{get_type({{value.id}})},
-          {% end %}
-          {% end %}index(id))
+          {% end %}{% end %}
+          created_at varchar(64),
+          updated_at varchar(64),
+          index(id));
           QUERY
         when "postgres"
-          q = <<-QUERY
+          q =  <<-QUERY
           create table if not exists #{table_name}(id serial
           {% for key, value in cols %}
           {% if value.is_a?(NamedTupleLiteral) %}
@@ -365,8 +403,9 @@ module Topaz
           {% end %}
           {% else %}
           ,{{key.id}} #{get_type({{value.id}})}
-          {% end %}
-          {% end %})
+          {% end %}{% end %}
+          ,created_at varchar(64)
+          ,updated_at varchar(64));
           QUERY
         when "sqlite3"
           q = <<-QUERY
@@ -381,15 +420,13 @@ module Topaz
           {% end %}
           {% else %}
           ,{{key.id}} #{get_type({{value.id}})}
-          {% end %}
-          {% end %})
+          {% end %}{% end %}
+          ,created_at varchar(64)
+          ,updated_at varchar(64));
           QUERY
-        else
-          q = ""
         end
 
         q = q.gsub("\n", "")
-
         exec q
       end
 
@@ -448,85 +485,8 @@ module Topaz
         end
       end
 
-      protected def set_value_of(_key : String, _value : DB::Any)
-        {% if cols.size > 0 %}
-          case _key
-               {% for key, value in cols %}
-               when "{{key.id}}"
-                 @{{key.id}} = _value
-               {% end %}
-          end
-        {% end %}
-      end
-
-      protected def as_json(only : Array(Symbol), except : Array(Symbol))
-
-        json = ""
-
-        to_h.keys.each do |key|
-
-          is_string? = to_h[key].class == String
-
-          Topaz::Log.w "only and except is set at the same time\nexcept will be ignored" if only.size > 0 && except.size > 0
-
-          add = !only.find{ |o| o.to_s == key }.nil? if only.size > 0
-          add = except.find{ |e| e.to_s == key }.nil? if except.size > 0 && add.nil?
-          add = true if add.nil?
-
-          if add
-            json += "\"#{key}\": \"#{to_h[key]}\"" if is_string?
-            json += "\"#{key}\": #{to_h[key]}" unless is_string?
-            json += ", "
-          end
-        end
-
-        raise "No json element found with your option" if json.size < 3
-
-        json[0..json.size-3]
-      end
-
-      def json(options : NamedTuple|Nil = nil)
-
-        included = ""
-        only     = [] of Symbol
-        except   = [] of Symbol
-
-        unless options.nil?
-          options.each_key do |k|
-            if k.to_s == "include"
-              if options[k].is_a?(Symbol)
-                ms = elements(options[k].as(Symbol))
-                included += ", \"#{options[k]}\": #{ms.json}" unless ms.nil?
-              elsif options[k].is_a?(NamedTuple)
-                options[k].as(NamedTuple).each_key do |_k|
-                  eles = elements(_k)
-                  included += ", \"#{_k}\": #{eles.json(options[k][_k])}" unless eles.nil?
-                end
-              end
-            elsif k.to_s == "except"
-              except = options[k].as(Array(Symbol)) if options[k].is_a?(Array(Symbol))
-              except = [ options[k].as(Symbol) ] if options[k].is_a?(Symbol)
-            elsif k.to_s == "only"
-              only = options[k].as(Array(Symbol)) if options[k].is_a?(Array(Symbol))
-              only = [ options[k].as(Symbol) ] if options[k].is_a?(Symbol)
-            end
-          end
-        end
-
-        "{#{as_json(only, except)}#{included}}"
-      end
-
       class Set < Array(self)
-        def json(options : NamedTuple|Nil = nil)
-
-          json = "["
-          each_with_index do |m, i|
-            json += "#{m.json(options)}"
-            json += ", " if i != size-1
-          end
-          json += "]"
-          json
-        end
+        # Model set
       end
 
       {% for key, value in cols %}
@@ -572,10 +532,10 @@ module Topaz
         def elements(ms : Symbol|String)
           {% if models.size > 0 %}
             case ms
-                {% for key, value in models %}
+              {% for key, value in models %}
                 when :{{key.id}}, "{{key.id}}"
                   return {{key.id}}
-                {% end %}
+              {% end %}
             end
           {% end %}
         end

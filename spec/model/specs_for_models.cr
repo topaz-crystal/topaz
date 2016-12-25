@@ -13,6 +13,23 @@ macro select_db(db)
       EmptyColumn.select.size.should eq(1)
     end
 
+    it "created_at and udpated_at" do
+      EmptyColumn.drop_table
+      EmptyColumn.create_table
+      e0 = EmptyColumn.create
+      e1 = EmptyColumn.find(1)
+      e0.created_at.to_s.should eq(e1.created_at.to_s)
+      e0.updated_at.to_s.should eq(e1.updated_at.to_s)
+      sleep 1
+      e0.update
+      EmptyColumn.create
+      e2 = EmptyColumn.find(2)
+      s0 = e0.updated_at.as(Time) - e0.created_at.as(Time)
+      s1 = e2.created_at.as(Time) - e0.created_at.as(Time)
+      (s0.seconds >= 1).should eq(true)
+      (s1.seconds >= 1).should eq(true)
+    end
+
     it "Check all types" do
       AllTypes.drop_table
       AllTypes.create_table
@@ -44,6 +61,7 @@ macro select_db(db)
       UpdatedModel.find(2).name.should eq("mock1")
       m2 = UpdatedModel.find(2)
       m2.update(name: "mock_updated2")
+      m2.name.should eq("mock_updated2")
       UpdatedModel.find(2).name.should eq("mock_updated2")
       UpdatedModel.update(name: "mock_udpated_all")
       UpdatedModel.where("name = 'mock_udpated_all'").select.size.should eq(10)
@@ -72,7 +90,7 @@ macro select_db(db)
       n0.test0.should eq("ok0")
       n0.test1.should eq(12)
       n0.test2.should eq(12.0)
-      
+
       n1 = NullableModel.find(2)
       n1.test0.should eq("ok1")
       n1.test1.should eq(12)
@@ -94,54 +112,38 @@ macro select_db(db)
       n5.test2.should eq(nil)
     end
 
-    it "Generate json" do
-      
+    it "json" do
+
       JsonParent.drop_table
       JsonChild.drop_table
-      JsonPet.drop_table
-      JsonToy.drop_table
-      JsonPart.drop_table
-      
+
       JsonParent.create_table
       JsonChild.create_table
-      JsonPet.create_table
-      JsonToy.create_table
-      JsonPart.create_table
-      
+
       p = JsonParent.create("John")
       c1 = JsonChild.create(12, p.id)
       c2 = JsonChild.create(15, p.id)
       c3 = JsonChild.create(23, p.id)
-      pe1 = JsonPet.create(p.id)
-      pe2 = JsonPet.create(p.id)
-      pe3 = JsonPet.create(p.id)
-      pe4 = JsonPet.create(p.id)
-      t1 = JsonToy.create("abc", 10i32, c1.id)
-      t2 = JsonToy.create("def", 12i32, c1.id)
-      t3 = JsonToy.create("ghi", 15i32, c2.id)
-      pa1 = JsonPart.create(t1.id)
-      pa2 = JsonPart.create(t3.id)
-      pa3 = JsonPart.create(t3.id)
-      pa4 = JsonPart.create(t3.id)
-      
-      p.childlen.size.should eq 3
-      p.pets.size.should eq 4
-      c1.toies.size.should eq 2
-      c2.toies.size.should eq 1
-      t1.parts.size.should eq 1
-      t3.parts.size.should eq 3
-      
-      p = JsonParent.select.first
-      p.json.should eq "{\"id\": 1, \"name\": \"John\"}"
-      p.json({include: :childlen, except: :id}).should eq "{\"name\": \"John\", \"childlen\": [{\"id\": 1, \"age\": 12, \"p_id\": 1}, {\"id\": 2, \"age\": 15, \"p_id\": 1}, {\"id\": 3, \"age\": 23, \"p_id\": 1}]}"
-      p.json({include: {childlen: {except: [:id, :p_id]}, pets: nil}}).should eq "{\"id\": 1, \"name\": \"John\", \"childlen\": [{\"age\": 12}, {\"age\": 15}, {\"age\": 23}], \"pets\": [{\"id\": 1, \"p_id\": 1}, {\"id\": 2, \"p_id\": 1}, {\"id\": 3, \"p_id\": 1}, {\"id\": 4, \"p_id\": 1}]}"
-      p.json({include: {childlen: {include: {toies: {include: :parts, only: :price}}}, pets: nil}}).should eq "{\"id\": 1, \"name\": \"John\", \"childlen\": [{\"id\": 1, \"age\": 12, \"p_id\": 1, \"toies\": [{\"price\": 10, \"parts\": [{\"id\": 1, \"t_id\": 1}]}, {\"price\": 12, \"parts\": []}]}, {\"id\": 2, \"age\": 15, \"p_id\": 1, \"toies\": [{\"price\": 15, \"parts\": [{\"id\": 2, \"t_id\": 3}, {\"id\": 3, \"t_id\": 3}, {\"id\": 4, \"t_id\": 3}]}]}, {\"id\": 3, \"age\": 23, \"p_id\": 1, \"toies\": []}], \"pets\": [{\"id\": 1, \"p_id\": 1}, {\"id\": 2, \"p_id\": 1}, {\"id\": 3, \"p_id\": 1}, {\"id\": 4, \"p_id\": 1}]}"
+
+      time_p = p.created_at.as(Time).to_s("%FT%T%z")
+      time_c1 = c1.created_at.as(Time).to_s("%FT%T%z")
+      time_c2 = c2.created_at.as(Time).to_s("%FT%T%z")
+      time_c3 = c3.created_at.as(Time).to_s("%FT%T%z")
+
+      p.to_json.should eq("{\"id\":1,\"name\":\"John\",\"created_at\":\"#{time_p}\",\"updated_at\":\"#{time_p}\"}")
+      c1.to_json.should eq("{\"id\":1,\"age\":12,\"p_id\":1,\"created_at\":\"#{time_c1}\",\"updated_at\":\"#{time_c1}\"}")
+      c2.to_json.should eq("{\"id\":2,\"age\":15,\"p_id\":1,\"created_at\":\"#{time_c2}\",\"updated_at\":\"#{time_c2}\"}")
+      c3.to_json.should eq("{\"id\":3,\"age\":23,\"p_id\":1,\"created_at\":\"#{time_c3}\",\"updated_at\":\"#{time_c3}\"}")
+
+      p = JsonParent.from_json("{\"id\": -1, \"name\": \"Who\"}")
+      p.save
+      p.id.should eq(2)
     end
 
     it "Create in transaction" do
       TransactionModel.drop_table
       TransactionModel.create_table
-      
+
       Topaz::Db.shared.transaction do |tx|
         TransactionModel.in(tx).select.size.should eq(0)
         t0 = TransactionModel.in(tx).create("name0")
@@ -193,5 +195,3 @@ macro select_db(db)
     end
   end
 end
-
-

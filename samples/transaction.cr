@@ -24,24 +24,21 @@ Topaz::Db.shared.transaction do |tx|
   # All operation can be rollbacked if some errors happen
   TransactionSample.in(tx).create("sample0")
   TransactionSample.in(tx).create("sample1")
-  
   # You can find models by
   TransactionSample.in(tx).find(1).name
   # => sample0
   TransactionSample.in(tx).where("name = \'sample1\'").select.size
   # => 1
-  
   # You can update them
   t0 = TransactionSample.in(tx).find(1)
   t0.in(tx).update(name: "sample0 updated")
   TransactionSample.in(tx).find(1).name
   # => sample0 updated
-  
   # You can delete them
   t1 = TransactionSample.in(tx).find(2)
   t1.in(tx).delete
   TransactionSample.in(tx).select.size
-  #=> 1
+  # => 1
 
   # You cannot call mutiple database operation at the same time like
   # TransactionSample.in(tx).find(1).update(name: "error!")

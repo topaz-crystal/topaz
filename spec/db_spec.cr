@@ -1,7 +1,6 @@
 require "./spec_helper"
 
 describe Topaz do
-  
   it "Setup db without any errors" do
     Topaz::Db.setup("sqlite3://./db/sample.db")
     Topaz::Db.close
