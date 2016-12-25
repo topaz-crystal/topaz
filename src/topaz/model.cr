@@ -11,6 +11,9 @@ module Topaz
     @q  : String?
     @tx : DB::Transaction?
 
+    getter created_at : Time|Nil
+    getter updated_at : Time|Nil
+
     macro columns(cols)
       
       def initialize({% for key, value in cols %}

@@ -1,8 +1,8 @@
 require "../src/topaz"
 
-##################
-# Nullable Model #
-##################
+###################
+# Nullable Column #
+###################
 # You can specify nullable or not nullable for each column
 # This is how to define it
 class NullableModel < Topaz::Model
