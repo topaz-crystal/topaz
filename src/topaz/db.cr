@@ -33,6 +33,10 @@ module Topaz
       @@shared = nil
     end
 
+    def self.show_query(set : Bool)
+      Topaz::Log.show_query(set)
+    end
+
     protected def self.scheme
       check
       @@shared.as(DB::Database).uri.scheme

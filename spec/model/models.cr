@@ -34,6 +34,14 @@ class DeletedModel < Topaz::Model
   )
 end
 
+class NullableModel < Topaz::Model
+  columns(
+    test0: String,
+    test1: {type: Int32, nullable: false},
+    test2: {type: Float64, nullable: true},
+  )
+end
+
 class JsonParent < Topaz::Model
   columns(name: String)
   has_many(

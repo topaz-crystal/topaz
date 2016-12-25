@@ -10,3 +10,4 @@ sample:
 	crystal run ./samples/model.cr
 	crystal run ./samples/association.cr
 	crystal run ./samples/json.cr
+	crystal run ./samples/transaction.cr

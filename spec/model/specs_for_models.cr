@@ -2,7 +2,6 @@ require "../spec_helper"
 require "./models"
 
 macro select_db(db)
-
   Topaz::Db.setup("{{db.id}}")
 
   describe Topaz do
@@ -60,6 +59,39 @@ macro select_db(db)
       DeletedModel.select.size.should eq(9)
       DeletedModel.delete
       DeletedModel.select.size.should eq(0)
+    end
+
+    it "Nullable column" do
+      NullableModel.drop_table
+      NullableModel.create_table
+
+      NullableModel.new("ok0", 12, 12.0).save
+      NullableModel.create("ok1", 12, 12.0)
+
+      n0 = NullableModel.find(1)
+      n0.test0.should eq("ok0")
+      n0.test1.should eq(12)
+      n0.test2.should eq(12.0)
+      
+      n1 = NullableModel.find(2)
+      n1.test0.should eq("ok1")
+      n1.test1.should eq(12)
+      n1.test2.should eq(12.0)
+
+      n0.update(test2: nil)
+      n2 = NullableModel.find(1)
+      n2.test2.should eq(nil)
+
+      n3 = NullableModel.find(2)
+      n3.test2 = nil
+      n3.update
+
+      n4 = NullableModel.find(2)
+      n4.test2.should eq(nil)
+
+      NullableModel.create("ok2", 13, nil)
+      n5 = NullableModel.find(3)
+      n5.test2.should eq(nil)
     end
 
     it "Generate json" do

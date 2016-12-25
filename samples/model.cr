@@ -19,10 +19,10 @@ end
 
 # Setup logger level
 Topaz::Log.debug_mode(false)
-Topaz::Log.show_query(true)
 
 # Setup db
 Topaz::Db.setup("sqlite3://./db/sample.db")
+Topaz::Db.show_query(true)
 
 # Setup tables
 # You can create or drop a table as follows

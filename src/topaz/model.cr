@@ -1,3 +1,4 @@
+require "json"
 # This is a main wrapper class for Topaz models.
 # Any class extending Topaz::Model can be transparent models for any databases.
 # The model have to call `columns` macro even if you don't have any columns
@@ -13,13 +14,29 @@ module Topaz
     macro columns(cols)
       
       def initialize({% for key, value in cols %}
-                       @{{key.id}} : {{value.id}},
+                       {% if value.is_a?(NamedTupleLiteral) %}
+                         {% if value[:nullable] %}
+                           @{{key.id}} : {{value[:type]}}|Nil,
+                         {% else %}
+                           @{{key.id}} : {{value[:type]}},
+                         {% end %}
+                       {% else %}
+                         @{{key.id}} : {{value.id}},
+                       {% end %}
                      {% end %})
       end
 
       protected def initialize(@id : Int32,
                                {% for key, value in cols %}
-                                 @{{key.id}} : {{value.id}},
+                                 {% if value.is_a?(NamedTupleLiteral) %}
+                                   {% if value[:nullable] %}
+                                     @{{key.id}} : {{value[:type]}}|Nil,
+                                   {% else %}
+                                     @{{key.id}} : {{value[:type]}},
+                                   {% end %}
+                                 {% else %}
+                                   @{{key.id}} : {{value.id}},
+                                 {% end %}
                                {% end %})
       end
 
@@ -117,15 +134,34 @@ module Topaz
 
         if data.keys.size == 0
           {% for key, value, idx in cols %}
-            updated += "{{key}} = \'#{@{{key}}}\'" unless @{{key}}.nil?
-            {% if idx != cols.size - 1 %}
-              updated += ", "
+            {% if value.is_a?(NamedTupleLiteral) %}
+              {% if value[:nullable] %}
+                updated += "{{key}} = \'#{@{{key}}}\'" unless @{{key}}.nil?
+                updated += "{{key}} = null" if @{{key}}.nil?
+                {% if idx != cols.size - 1 %}
+                  updated += ", "
+                {% end %}
+              {% else %}
+                updated += "{{key}} = \'#{@{{key}}}\'" unless @{{key}}.nil?
+                {% if idx != cols.size - 1 %}
+                  updated += ", "
+                {% end %}
+              {% end %}
+            {% else %}
+              updated += "{{key}} = \'#{@{{key}}}\'" unless @{{key}}.nil?
+              {% if idx != cols.size - 1 %}
+                updated += ", "
+              {% end %}
             {% end %}
           {% end %}
         else
           data.each_with_index do |key, value, idx|
             unless value.nil?
               updated += "#{key} = \'#{value}\'"
+              updated += ", " if idx != data.size-1
+              set_value_of(key.to_s, value) unless @id == -1
+            else
+              updated += "#{key} = null"
               updated += ", " if idx != data.size-1
               set_value_of(key.to_s, value) unless @id == -1
             end
@@ -161,7 +197,15 @@ module Topaz
                 typeof(self).new(
                 rows.read(Int32), # id
                 {% for key, value in cols %}
-                  rows.read({{value.id}}),
+                  {% if value.is_a?(NamedTupleLiteral) %}
+                    {% if value[:nullable] %}
+                      rows.read({{value[:type]}}|Nil),
+                    {% else %}
+                      rows.read({{value[:type]}}),
+                    {% end %}
+                  {% else %}
+                    rows.read({{value.id}}),
+                  {% end %}
                 {% end %}
               ))
             when "sqlite3"
@@ -169,7 +213,15 @@ module Topaz
                 typeof(self).new(
                 rows.read(Int64).to_i32, # id
                 {% for key, value in cols %}
-                  rows.read({{value.id}}),
+                  {% if value.is_a?(NamedTupleLiteral) %}
+                    {% if value[:nullable] %}
+                      rows.read({{value[:type]}}|Nil),
+                    {% else %}
+                      rows.read({{value[:type]}}),
+                    {% end %}
+                  {% else %}
+                    rows.read({{value.id}}),
+                  {% end %}
                 {% end %}
               ))
             end
@@ -179,13 +231,37 @@ module Topaz
         set
       end
 
-      def self.create({% for key, value in cols %}{{key.id}} : {{value.id}},{% end %})
+      def self.create(
+            {% for key, value in cols %}
+              {% if value.is_a?(NamedTupleLiteral) %}
+                {% if value[:nullable] %}
+                  {{key.id}} : {{value[:type]}}|Nil,
+                {% else %}
+                  {{key.id}} : {{value[:type]}},
+                {% end %}
+              {% else %}
+                {{key.id}} : {{value.id}},
+              {% end %}
+            {% end %}
+          )
         model = new({% for key, value in cols %}{{key.id}},{% end %})
         res = model.save
         model
       end
 
-      def create({% for key, value in cols %}{{key.id}} : {{value.id}},{% end %})
+      def create(
+            {% for key, value in cols %}
+              {% if value.is_a?(NamedTupleLiteral) %}
+                {% if value[:nullable] %}
+                  {{key.id}} : {{value[:type]}}|Nil,
+                {% else %}
+                  {{key.id}} : {{value[:type]}},
+                {% end %}
+              {% else %}
+                {{key.id}} : {{value.id}},
+              {% end %}
+            {% end %}
+          )
         model = typeof(self).new({% for key, value in cols %}{{key.id}},{% end %})
         model.in(@tx.as(DB::Transaction)) unless @tx.nil?
         res = model.save
@@ -198,11 +274,22 @@ module Topaz
         vals = [] of String
 
         {% for key, value in cols %}
-          keys.push("{{key.id}}") unless @{{key.id}}.nil?
-          vals.push("'#{@{{key.id}}}'") unless @{{key.id}}.nil?
+          {% if value.is_a?(NamedTupleLiteral) %}
+            {% if value[:nullable] %}
+              keys.push("{{key.id}}")
+              vals.push("'#{@{{key.id}}}'") unless @{{key.id}}.nil?
+              vals.push("null") if @{{key.id}}.nil?
+            {% else %}
+              keys.push("{{key.id}}") unless @{{key.id}}.nil?
+              vals.push("'#{@{{key.id}}}'") unless @{{key.id}}.nil?
+            {% end %}
+          {% else %}
+            keys.push("{{key.id}}") unless @{{key.id}}.nil?
+            vals.push("'#{@{{key.id}}}'") unless @{{key.id}}.nil?
+          {% end %}
         {% end %}
           
-          _keys = keys.join(", ")
+        _keys = keys.join(", ")
         _vals = vals.join(", ")
         
         if _vals.empty?
@@ -247,14 +334,58 @@ module Topaz
 
         case Topaz::Db.scheme
         when "mysql"
-          q = "create table if not exists #{table_name}(id int auto_increment,{% for key, value in cols %}{{key.id}} #{get_type({{value.id}})},{% end %}index(id))"
+          q = <<-QUERY
+          create table if not exists #{table_name}(id int auto_increment,
+          {% for key, value in cols %}
+          {% if value.is_a?(NamedTupleLiteral) %}
+          {{key.id}} #{get_type({{value[:type]}})}
+          {% if value[:nullable] != nil && value[:nullable] %}
+           null
+          {% elsif value[:nullable] != nil && !value[:nullable] %}
+           not null
+          {% end %},
+          {% else %}
+          {{key.id}} #{get_type({{value.id}})},
+          {% end %}
+          {% end %}index(id))
+          QUERY
         when "postgres"
-          q = "create table if not exists #{table_name}(id serial{% for key, value in cols %},{{key.id}} #{get_type({{value.id}})}{% end %})"
+          q = <<-QUERY
+          create table if not exists #{table_name}(id serial
+          {% for key, value in cols %}
+          {% if value.is_a?(NamedTupleLiteral) %}
+          ,{{key.id}} #{get_type({{value[:type]}})}
+          {% if value[:nullable] != nil && value[:nullable] %}
+           null
+          {% elsif value[:nullable] != nil && !value[:nullable] %}
+           not null
+          {% end %}
+          {% else %}
+          ,{{key.id}} #{get_type({{value.id}})}
+          {% end %}
+          {% end %})
+          QUERY
         when "sqlite3"
-          q = "create table if not exists #{table_name}(id integer primary key{% for key, value in cols %},{{key.id}} #{get_type({{value.id}})}{% end %})"
+          q = <<-QUERY
+          create table if not exists #{table_name}(id integer primary key
+          {% for key, value in cols %}
+          {% if value.is_a?(NamedTupleLiteral) %}
+          ,{{key.id}} #{get_type({{value[:type]}})}
+          {% if value[:nullable] != nil && value[:nullable] %}
+           null
+          {% elsif value[:nullable] != nil && !value[:nullable] %}
+           not null
+          {% end %}
+          {% else %}
+          ,{{key.id}} #{get_type({{value.id}})}
+          {% end %}
+          {% end %})
+          QUERY
         else
           q = ""
         end
+
+        q = q.gsub("\n", "")
 
         exec q
       end
@@ -308,7 +439,7 @@ module Topaz
           return "double" if Topaz::Db.scheme == "mysql" || Topaz::Db.scheme == "sqlite3"
           return "double precision" if Topaz::Db.scheme == "postgres"
         when "Bool"
-          return "boolean"
+          return "tinyint"
         when "Time"
           return "datetime"
         end
@@ -396,13 +527,27 @@ module Topaz
       end
 
       {% for key, value in cols %}
-        def {{key.id}}=(@{{key.id}} : {{value.id}})
-        end
-
-        def {{key.id}} : {{value.id}}
-          return @{{key.id}}.as({{value.id}})
-        end
-
+        {% if value.is_a?(NamedTupleLiteral) %}
+          {% if value[:nullable] %}
+            def {{key.id}}=(@{{key.id}} : {{value[:type]}}|Nil)
+            end
+            def {{key.id}} : {{value[:type]}}|Nil
+              return @{{key.id}}.as({{value[:type]}}|Nil)
+            end
+          {% else %}
+            def {{key.id}}=(@{{key.id}} : {{value[:type]}})
+            end
+            def {{key.id}} : {{value[:type]}}
+              return @{{key.id}}.as({{value[:type]}})
+            end
+          {% end %}
+        {% else %}
+          def {{key.id}}=(@{{key.id}} : {{value.id}})
+          end
+          def {{key.id}} : {{value.id}}
+            return @{{key.id}}.as({{value.id}})
+          end
+        {% end %}
       {% end %}
     end
 
@@ -410,7 +555,7 @@ module Topaz
       {% if cols.size > 0 %}
         columns({{cols}})
       {% else %}
-      columns({} of Symbol => String)
+        columns({} of Symbol => String)
       {% end %}
     end
 

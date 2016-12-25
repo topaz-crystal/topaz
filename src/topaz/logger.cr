@@ -14,7 +14,7 @@ module Topaz
       log.debug_mode = set
     end
 
-    def self.show_query(set : Bool)
+    protected def self.show_query(set : Bool)
       log = Topaz::Log.get_instance
       log.show_query = set
     end

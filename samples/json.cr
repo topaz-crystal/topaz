@@ -49,6 +49,7 @@ class JsonPart < Topaz::Model
 end
 
 Topaz::Db.setup("sqlite3://./db/sample.db")
+Topaz::Db.show_query(true)
 
 JsonParent.drop_table
 JsonChild.drop_table
