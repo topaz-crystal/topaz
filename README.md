@@ -82,9 +82,6 @@ p.childlen.size
 
 child1.parent.id
 # => 1
-
-p.json({include: :childlen})
-# => {"id": 1, "childlen": [{"id": 1, "parent_id": 1}, {"id": 2, "parent_id": 1}, {"id": 3, "parent_id": 1}]}
 ```
 See [sample code](https://github.com/topaz-crystal/topaz/blob/master/samples/association.cr) for detail.  
 
