@@ -22,4 +22,4 @@ before_install:
   - createuser root
   - createdb topaz
   - export DATABASE_URL=postgres://root@localhost/topaz
-script: make test
+script: make
