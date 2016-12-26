@@ -18,8 +18,8 @@ macro select_db(db)
       EmptyColumn.create_table
       e0 = EmptyColumn.create
       e1 = EmptyColumn.find(1)
-      e0.created_at.to_s.should eq(e1.created_at.to_s)
-      e0.updated_at.to_s.should eq(e1.updated_at.to_s)
+      e0.created_at.as(Time).to_s(Topaz::Model::TIME_FORMAT).should eq(e1.created_at.as(Time).to_s(Topaz::Model::TIME_FORMAT))
+      e0.updated_at.as(Time).to_s(Topaz::Model::TIME_FORMAT).should eq(e1.updated_at.as(Time).to_s(Topaz::Model::TIME_FORMAT))
       sleep 1
       e0.update
       EmptyColumn.create
