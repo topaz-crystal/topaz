@@ -1,10 +1,10 @@
 name: topaz
-version: 0.2.1
+version: 0.2.2
 
 authors:
   - Taichiro Suzuki <taichiro0709@gmail.com>
 
-crystal: 0.20.1
+crystal: 0.20.3
 
 license: MIT
 
@@ -15,6 +15,5 @@ dependencies:
     github: crystal-lang/crystal-sqlite3
   pg:
     github: will/crystal-pg
-    branch: master
   singleton:
     github: topaz-crystal/crystal-singleton
