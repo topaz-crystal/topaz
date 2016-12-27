@@ -86,12 +86,9 @@ child1.parent.id
 See [sample code](https://github.com/topaz-crystal/topaz/blob/master/samples/association.cr) for detail.  
 
 **Supported data types.**  
-
-[MySQL, PostgreSQL, SQLite3]  
 String, Int32, Int64, Float32, Float64  
 
 TODO:
-* Support DATE
 * Support migration.
 
 ## Contributing

@@ -368,9 +368,9 @@ module Topaz
       end
 
       def self.create_table
-
+       
         q = ""
-
+       
         case Topaz::Db.scheme
         when "mysql"
           q =  <<-QUERY
@@ -425,7 +425,7 @@ module Topaz
           ,updated_at varchar(64));
           QUERY
         end
-
+       
         q = q.gsub("\n", "")
         exec q
       end
