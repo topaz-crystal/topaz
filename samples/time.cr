@@ -14,7 +14,6 @@ class TimeModel < Topaz::Model
 end
 
 Topaz::Db.setup("sqlite3://./db/sample.db")
-Topaz::Db.show_query(true)
 
 TimeModel.drop_table
 TimeModel.create_table

@@ -14,7 +14,6 @@ class NullableModel < Topaz::Model
 end
 
 Topaz::Db.setup("sqlite3://./db/sample.db")
-Topaz::Db.show_query(true)
 
 # Setup table
 NullableModel.drop_table

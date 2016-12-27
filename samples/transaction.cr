@@ -11,7 +11,6 @@ class TransactionSample < Topaz::Model
 end
 
 Topaz::Db.setup("sqlite3://./db/sample.db")
-Topaz::Db.show_query(true)
 
 TransactionSample.drop_table
 TransactionSample.create_table

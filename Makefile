@@ -11,3 +11,6 @@ sample:
 	crystal run ./samples/association.cr
 	crystal run ./samples/json.cr
 	crystal run ./samples/transaction.cr
+	crystal run ./samples/migration.cr
+	crystal run ./samples/time.cr
+	crystal run ./samples/nullable.cr

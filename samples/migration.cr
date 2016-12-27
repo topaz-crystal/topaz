@@ -29,11 +29,11 @@ MigrationSample.create_table
 # `crystal run src/migration/sample.cr`
 # After you create the model, you can handle it like
 s = MigrationSample.create("AAA", 15)
-puts s.id         # => 1
-puts s.sample     # => "AAA"
-puts s.score      # => 15
-puts s.created_at # => some time
-puts s.updated_at # => some time
+# s.id         # => 1
+# s.sample     # => "AAA"
+# s.score      # => 15
+# s.created_at # => (some time)
+# s.updated_at # => (some time)
 #
 # You can drop the table by
 MigrationSample.drop_table
