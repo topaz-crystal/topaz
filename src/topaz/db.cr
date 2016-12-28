@@ -37,7 +37,7 @@ module Topaz
       Topaz::Log.show_query(set)
     end
 
-    protected def self.scheme
+    def self.scheme
       check
       @@shared.as(DB::Database).uri.scheme
     end

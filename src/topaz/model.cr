@@ -25,7 +25,7 @@ module Topaz
             {{key}}: {{value.id}}|Nil,
           {% end %}
         {% end %}
-        created_at: Time|Nil,
+          created_at: Time|Nil,
         updated_at: Time|Nil)
 
       def initialize({% for key, value in cols %}
@@ -33,10 +33,10 @@ module Topaz
                          {% if value[:nullable] %}
                            @{{key.id}} : {{value[:type]}}|Nil,
                          {% else %}
-                           @{{key.id}} : {{value[:type]}},
+                         @{{key.id}} : {{value[:type]}},
                          {% end %}
                        {% else %}
-                         @{{key.id}} : {{value.id}},
+                       @{{key.id}} : {{value.id}},
                        {% end %}
                      {% end %})
       end
@@ -47,10 +47,10 @@ module Topaz
                                    {% if value[:nullable] %}
                                      @{{key.id}} : {{value[:type]}}|Nil,
                                    {% else %}
-                                     @{{key.id}} : {{value[:type]}},
+                                   @{{key.id}} : {{value[:type]}},
                                    {% end %}
                                  {% else %}
-                                   @{{key.id}} : {{value.id}},
+                                 @{{key.id}} : {{value.id}},
                                  {% end %}
                                {% end %}created_at : String, updated_at : String)
         @created_at = Time.parse(created_at, TIME_FORMAT)
@@ -158,10 +158,10 @@ module Topaz
                 updated += "{{key}} = \'#{@{{key}}}\', " unless @{{key}}.nil?
                 updated += "{{key}} = null, " if @{{key}}.nil?
               {% else %}
-                updated += "{{key}} = \'#{@{{key}}}\', " unless @{{key}}.nil?
+              updated += "{{key}} = \'#{@{{key}}}\', " unless @{{key}}.nil?
               {% end %}
             {% else %}
-              updated += "{{key}} = \'#{@{{key}}}\', " unless @{{key}}.nil?
+            updated += "{{key}} = \'#{@{{key}}}\', " unless @{{key}}.nil?
             {% end %}
           {% end %}
         else
@@ -188,14 +188,14 @@ module Topaz
       protected def set_value_of(_key : String, _value : DB::Any)
         {% if cols.size > 0 %}
           case _key
-            {% for key, value in cols %}
-            when "{{key.id}}"
-              {% if value.is_a?(NamedTupleLiteral) %}
-                @{{key.id}} = _value if _value.is_a?({{value[:type]}})
-              {% else %}
-                @{{key.id}} = _value if _value.is_a?({{value.id}})
-              {% end %}
-            {% end %}
+               {% for key, value in cols %}
+               when "{{key.id}}"
+                 {% if value.is_a?(NamedTupleLiteral) %}
+                   @{{key.id}} = _value if _value.is_a?({{value[:type]}})
+                 {% else %}
+                 @{{key.id}} = _value if _value.is_a?({{value.id}})
+                 {% end %}
+               {% end %}
           end
         {% end %}
       end
@@ -228,10 +228,10 @@ module Topaz
                     {% if value[:nullable] %}
                       rows.read({{value[:type]}}|Nil),
                     {% else %}
-                      rows.read({{value[:type]}}),
+                    rows.read({{value[:type]}}),
                     {% end %}
                   {% else %}
-                    rows.read({{value.id}}),
+                  rows.read({{value.id}}),
                   {% end %}
                 {% end %}
                 rows.read(String),
@@ -246,10 +246,10 @@ module Topaz
                     {% if value[:nullable] %}
                       rows.read({{value[:type]}}|Nil),
                     {% else %}
-                      rows.read({{value[:type]}}),
+                    rows.read({{value[:type]}}),
                     {% end %}
                   {% else %}
-                    rows.read({{value.id}}),
+                  rows.read({{value.id}}),
                   {% end %}
                 {% end %}
                 rows.read(String),
@@ -311,16 +311,16 @@ module Topaz
               vals.push("'#{@{{key.id}}}'") unless @{{key.id}}.nil?
               vals.push("null") if @{{key.id}}.nil?
             {% else %}
-              keys.push("{{key.id}}") unless @{{key.id}}.nil?
+            keys.push("{{key.id}}") unless @{{key.id}}.nil?
               vals.push("'#{@{{key.id}}}'") unless @{{key.id}}.nil?
             {% end %}
           {% else %}
-            keys.push("{{key.id}}") unless @{{key.id}}.nil?
+          keys.push("{{key.id}}") unless @{{key.id}}.nil?
             vals.push("'#{@{{key.id}}}'") unless @{{key.id}}.nil?
           {% end %}
         {% end %}
 
-        time = Time.now
+          time = Time.now
 
         keys.push("created_at")
         keys.push("updated_at")
@@ -353,7 +353,7 @@ module Topaz
         [
           ["id", @id],
           {% for key, value in cols %}["{{key.id}}", @{{key.id}}],{% end %}
-          ["created_at", "#{@created_at}"],
+            ["created_at", "#{@created_at}"],
           ["updated_at", "#{@updated_at}"],
         ]
       end
@@ -362,15 +362,114 @@ module Topaz
         {
           "id" => @id,
           {% for key, value in cols %}"{{key.id}}" => @{{key.id}},{% end %}
-          "created_at" => "#{@created_at}",
+            "created_at" => "#{@created_at}",
           "updated_at" => "#{@updated_at}",
         }
       end
 
-      def self.create_table
-       
+      protected def self.registered_columns
+        arr = Array(String).new
+        arr.push("id")
         q = ""
-       
+        case Topaz::Db.scheme
+        when "mysql"
+          q = "show columns from #{table_name}"
+        when "postgres"
+          q = "select column_name from information_schema.columns where table_name = \'#{table_name}\'"
+        when "sqlite3"
+          q = "pragma table_info(\'#{table_name}\')"
+        end
+        
+        Topaz::Db.shared.query(q) do |rows|
+          rows.each do
+            rows.read(Int32) if Topaz::Db.scheme == "sqlite3"
+            name = rows.read(String)
+            if name != "id" && name != "created_at" && name != "updated_at"
+              arr.push(name)
+            end
+          end
+        end
+        arr.push("created_at")
+        arr.push("updated_at")
+        arr
+      end
+
+      protected def self.defined_columns
+        arr = Array(String).new
+        arr.push("id")
+        {% for key, value in cols %}
+          {% if value.is_a?(NamedTupleLiteral) %}
+            arr.push("{{key.id}}")
+          {% else %}
+            arr.push("{{key.id}}")
+          {% end %}
+        {% end %}
+        arr.push("created_at")
+        arr.push("updated_at")
+        arr
+      end
+
+      protected def self.copy_data_from_old
+        copied_columns = Array(String).new
+        registered_columns.each do |col|
+          copied_columns.push(col) if defined_columns.includes?(col)
+        end
+        "insert into #{table_name}(#{copied_columns.join(", ")}) select #{copied_columns.join(", ")} from #{table_name}_old"
+      end
+
+      def self.migrate_table
+        # todo transaction
+        puts " -- Rename old table -- "
+        Topaz::Db.shared.exec "alter table #{table_name} rename to #{table_name}_old"
+        puts " -- Create new table -- "
+        Topaz::Db.shared.exec create_table_query
+        puts " -- Copy data from old table -- "
+        puts copy_data_from_old
+        Topaz::Db.shared.exec copy_data_from_old
+        puts " -- Drop old table -- "
+        Topaz::Db.shared.exec "drop table if exists #{table_name}_old"
+      end
+
+      #def self._migrate_table
+      # 
+      #  current_cols = current_columns # Registered columns on the database
+      #  defined_cols = [] of NamedTuple(name: String, type: String) # Defined columns in source code
+      #  
+      #  {% for key, value in cols %}
+      #    {% if value.is_a?(NamedTupleLiteral) %}
+      #      defined_cols.push({name: "{{key.id}}", type: get_type({{value[:type]}}).as(String)})
+      #    {% else %}
+      #      defined_cols.push({name: "{{key.id}}", type: get_type({{value.id}}).as(String)})
+      #    {% end %}
+      #  {% end %}
+      # 
+      #  alter_table = "alter table #{table_name} "
+      #    
+      #  removed = [] of NamedTuple(name: String, type: String)
+      #  removed_query = alter_table
+      # 
+      #  added = [] of NamedTuple(name: String, type: String)
+      #  added_query = alter_table
+      # 
+      #  current_cols.each do |col|
+      #    removed_query += "drop column #{col[:name]}, " if defined_cols.find{|d| d[:name] == col[:name]}.nil?
+      #  end
+      # 
+      #  defined_cols.each_with_index do |col, i|
+      #    if current_cols.find{|d| d[:name] == col[:name]}.nil?
+      #      after_cols = ( i > 0 ? defined_cols[i-1][:name] : "id" )
+      #      added_query += "add column #{col[:name]} #{col[:type]} after #{after_cols}, "
+      #    end
+      #  end
+      # 
+      #  Topaz::Db.shared.exec removed_query[0..removed_query.size-3] if removed_query[0..removed_query.size-3].size > alter_table.size
+      #  Topaz::Db.shared.exec added_query[0..added_query.size-3] if added_query[0..added_query.size-3].size > alter_table.size
+      #end
+
+      def self.create_table_query
+                
+        q = ""
+        
         case Topaz::Db.scheme
         when "mysql"
           q =  <<-QUERY
@@ -425,14 +524,16 @@ module Topaz
           ,updated_at varchar(64));
           QUERY
         end
-       
+        
         q = q.gsub("\n", "")
-        exec q
+      end
+
+      def self.create_table
+        exec create_table_query
       end
 
       def self.drop_table
-        q = "drop table if exists #{table_name}"
-        exec q
+        exec "drop table if exists #{table_name}"
       end
 
       protected def self.exec(q)
@@ -498,15 +599,15 @@ module Topaz
               return @{{key.id}}.as({{value[:type]}}|Nil)
             end
           {% else %}
-            def {{key.id}}=(@{{key.id}} : {{value[:type]}})
-            end
+          def {{key.id}}=(@{{key.id}} : {{value[:type]}})
+          end
             def {{key.id}} : {{value[:type]}}
               return @{{key.id}}.as({{value[:type]}})
             end
           {% end %}
         {% else %}
-          def {{key.id}}=(@{{key.id}} : {{value.id}})
-          end
+        def {{key.id}}=(@{{key.id}} : {{value.id}})
+        end
           def {{key.id}} : {{value.id}}
             return @{{key.id}}.as({{value.id}})
           end
@@ -518,7 +619,7 @@ module Topaz
       {% if cols.size > 0 %}
         columns({{cols}})
       {% else %}
-        columns({} of Symbol => String)
+      columns({} of Symbol => String)
       {% end %}
     end
 
@@ -532,10 +633,10 @@ module Topaz
         def elements(ms : Symbol|String)
           {% if models.size > 0 %}
             case ms
-              {% for key, value in models %}
+                {% for key, value in models %}
                 when :{{key.id}}, "{{key.id}}"
                   return {{key.id}}
-              {% end %}
+                {% end %}
             end
           {% end %}
         end
