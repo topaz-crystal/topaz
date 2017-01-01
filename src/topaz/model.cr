@@ -473,7 +473,7 @@ module Topaz
           QUERY
         when "postgres"
           q =  <<-QUERY
-          create table if not exists #{table_name}(id int default nextval(\'#{table_name}_seq\')
+          create table if not exists #{table_name}(id int default nextval(#{table_name}_seq) not null
           {% for key, value in cols %}
           {% if value.is_a?(NamedTupleLiteral) %}
           ,{{key.id}} #{get_type({{value[:type]}})}

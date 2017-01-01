@@ -3,6 +3,7 @@ require "./models"
 
 macro select_db(db)
   Topaz::Db.setup("{{db.id}}")
+  Topaz::Db.show_query(true)
 
   describe Topaz do
 
