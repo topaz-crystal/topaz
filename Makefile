@@ -1,11 +1,27 @@
 
-all: test sample
+all: basic migration sample
 
-test:
+spec: basic migration
+
+basic:
 	crystal spec
 	crystal spec ./spec/model/sqlite3.cr
 	crystal spec ./spec/model/mysql.cr
 	crystal spec ./spec/model/pg.cr
+
+migration: mig-test-sqlite3 mig-test-mysql mig-test-pg
+
+mig-test-sqlite3:
+	crystal spec ./spec/model/migration/sqlite3_before.cr
+	crystal spec ./spec/model/migration/sqlite3_exec.cr
+
+mig-test-mysql:
+	crystal spec ./spec/model/migration/mysql_before.cr
+	crystal spec ./spec/model/migration/mysql_exec.cr
+
+mig-test-pg:
+	crystal spec ./spec/model/migration/pg_before.cr
+	crystal spec ./spec/model/migration/pg_exec.cr
 
 sample:
 	crystal run ./samples/model.cr
