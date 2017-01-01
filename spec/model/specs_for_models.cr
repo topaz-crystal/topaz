@@ -56,7 +56,9 @@ macro select_db(db)
       UpdatedModel.drop_table
       UpdatedModel.create_table
       10.times do |i|
-        UpdatedModel.create("mock#{i}", i)
+        up = UpdatedModel.create("mock#{i}", i)
+        up.id.should eq(i+1)
+        up.name.should eq("mock#{i}")
       end
       m = UpdatedModel.find(1)
       m.name = "mock_updated"

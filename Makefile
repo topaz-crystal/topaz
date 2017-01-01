@@ -1,5 +1,4 @@
-
-all: basic migration sample
+all: spec sample
 
 spec: basic migration
 

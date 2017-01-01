@@ -391,7 +391,7 @@ module Topaz
         when "mysql"
           q = "show columns from #{table_name}"
         when "postgres"
-          q = "select column_name from information_schema.columns where table_name = \'#{table_name}\'"
+          q = "select column_name, data_type from information_schema.columns where table_name = \'#{table_name}\'"
         when "sqlite3"
           q = "pragma table_info(\'#{table_name}\')"
         end
@@ -425,10 +425,12 @@ module Topaz
       end
 
       protected def self.copy_data_from_old
+        
         copied_columns = Array(String).new
+        defined = defined_columns
+        
         registered_columns.each do |col|
-          # Should check type
-          copied_columns.push(col) if defined_columns.includes?(col)
+          copied_columns.push(col) if defined.includes?(col)
         end
 
         copied = copied_columns.join(", ")
@@ -437,10 +439,6 @@ module Topaz
 
       def self.migrate_table
         copy_query = copy_data_from_old
-        # todo: same name different types
-        # todo: Out from transaction ? (Postgre)
-        # todo: when write test, check id
-        # todo: @tx = nil in read_result(select), save and update (query and exec (better?))
         Topaz::Db.shared.transaction do |tx|
           tx.connection.exec "alter table #{table_name} rename to #{table_name}_old"
           tx.connection.exec create_table_query
@@ -475,7 +473,7 @@ module Topaz
           QUERY
         when "postgres"
           q =  <<-QUERY
-          create table if not exists #{table_name}(id int default nextval(\'#{table_name}_seq\') not null
+          create table if not exists #{table_name}(id int default nextval(\'#{table_name}_seq\')
           {% for key, value in cols %}
           {% if value.is_a?(NamedTupleLiteral) %}
           ,{{key.id}} #{get_type({{value[:type]}})}
@@ -636,10 +634,6 @@ module Topaz
 
     macro has_many(**models)
       has_many({{models}})
-    end
-
-    def elements(dummy : Symbol | String)
-      raise "dummy elements has been called."
     end
 
     macro belongs_to(models)
