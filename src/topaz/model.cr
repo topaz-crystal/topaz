@@ -473,7 +473,7 @@ module Topaz
           QUERY
         when "postgres"
           q =  <<-QUERY
-          create table if not exists #{table_name}(id int default nextval(#{table_name}_seq) not null
+          create table if not exists #{table_name}(id int default nextval(\'#{table_name}_seq\') not null
           {% for key, value in cols %}
           {% if value.is_a?(NamedTupleLiteral) %}
           ,{{key.id}} #{get_type({{value[:type]}})}
@@ -511,7 +511,7 @@ module Topaz
       end
 
       def self.create_table
-        exec "create sequence if not exists #{table_name}_seq start 1" if Topaz::Db.scheme == "postgres"
+        exec "create sequence #{table_name}_seq start 1" if Topaz::Db.scheme == "postgres"
         exec create_table_query
       end
 
