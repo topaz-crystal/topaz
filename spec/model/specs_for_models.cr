@@ -20,15 +20,17 @@ macro select_db(db)
       EmptyColumn.drop_table
       EmptyColumn.create_table
       e0 = EmptyColumn.create
+      e0.id.should eq(1)
       e1 = EmptyColumn.find(1)
       e0.created_at.as(Time).to_s(Topaz::Model::TIME_FORMAT).should eq(e1.created_at.as(Time).to_s(Topaz::Model::TIME_FORMAT))
       e0.updated_at.as(Time).to_s(Topaz::Model::TIME_FORMAT).should eq(e1.updated_at.as(Time).to_s(Topaz::Model::TIME_FORMAT))
       sleep 1
       e0.update
-      EmptyColumn.create
-      e2 = EmptyColumn.find(2)
+      e2 = EmptyColumn.create
+      e2.id.should eq(2)
+      e3 = EmptyColumn.find(2)
       s0 = e0.updated_at.as(Time) - e0.created_at.as(Time)
-      s1 = e2.created_at.as(Time) - e0.created_at.as(Time)
+      s1 = e3.created_at.as(Time) - e0.created_at.as(Time)
       (s0.seconds >= 1).should eq(true)
       (s1.seconds >= 1).should eq(true)
     end

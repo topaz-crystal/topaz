@@ -41,7 +41,7 @@ Topaz::Db.shared.transaction do |tx|
 
   # You cannot call mutiple database operation at the same time like
   # TransactionSample.in(tx).find(1).update(name: "error!")
-  # Because found model is not in the transaction.
+  # Because found model by `find(1)` is not in the transaction.
   # So it should be like
   # TransactionSample.in(tx).find(1).in(tx).update(name: "Safe call!")
 end

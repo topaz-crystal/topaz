@@ -7,11 +7,13 @@ require "json"
 module Topaz
   class Model
     TIME_FORMAT = "%F %T:%L %z"
-    getter created_at : Time | Nil
-    getter updated_at : Time | Nil
+    getter created_at : Time?
+    getter updated_at : Time?
 
     @id = -1
     @q : String?
+    
+    # @tx is reset when select, save, update, delete is called.
     @tx : DB::Transaction?
 
     macro columns(cols)
@@ -20,18 +22,18 @@ module Topaz
         id: Int32,
         {% for key, value in cols %}
           {% if value.is_a?(NamedTupleLiteral) %}
-            {{key}}: {{value[:type]}}|Nil,
+            {{key}}: {{value[:type]}}?,
           {% else %}
-            {{key}}: {{value.id}}|Nil,
+            {{key}}: {{value.id}}?,
           {% end %}
         {% end %}
-        created_at: Time|Nil,
-        updated_at: Time|Nil)
+        created_at: Time?,
+        updated_at: Time?)
 
       def initialize({% for key, value in cols %}
                        {% if value.is_a?(NamedTupleLiteral) %}
                          {% if value[:nullable] %}
-                           @{{key.id}} : {{value[:type]}}|Nil,
+                           @{{key.id}} : {{value[:type]}}?,
                          {% else %}
                            @{{key.id}} : {{value[:type]}},
                          {% end %}
@@ -45,7 +47,7 @@ module Topaz
                                {% for key, value in cols %}
                                  {% if value.is_a?(NamedTupleLiteral) %}
                                    {% if value[:nullable] %}
-                                     @{{key.id}} : {{value[:type]}}|Nil,
+                                     @{{key.id}} : {{value[:type]}}?,
                                    {% else %}
                                      @{{key.id}} : {{value[:type]}},
                                    {% end %}
@@ -140,7 +142,7 @@ module Topaz
         @q = "where id = #{@id}" unless @id == -1
         @q = "delete from #{table_name} #{@q}"
         exec
-        @q = ""
+        refresh
       end
 
       def update(**data)
@@ -180,7 +182,7 @@ module Topaz
         @updated_at = time
         @q = "update #{table_name} set #{updated} #{@q}"
         exec
-        @q = ""
+        refresh
       end
 
       protected def set_value_of(_key : String, _value : DB::Any)
@@ -207,6 +209,7 @@ module Topaz
 
         raise "Failed to read data from database" if res.nil?
 
+        refresh
         res.as(Set)
       end
 
@@ -224,7 +227,7 @@ module Topaz
                 {% for key, value in cols %}
                   {% if value.is_a?(NamedTupleLiteral) %}
                     {% if value[:nullable] %}
-                      rows.read({{value[:type]}}|Nil),
+                      rows.read({{value[:type]}}?),
                     {% else %}
                       rows.read({{value[:type]}}),
                     {% end %}
@@ -243,11 +246,11 @@ module Topaz
                   {% if value.is_a?(NamedTupleLiteral) %}
                     {% if value[:nullable] %}
                       {% if value[:type].id == "Int32" %}
-                        (rows.read(Int64|Nil) || Nilwrapper).to_i32,
+                        (rows.read(Int64?) || Nilwrapper).to_i32,
                       {% elsif value[:type].id == "Float32" %}
-                        (rows.read(Float64|Nil) || Nilwrapper).to_f32,
+                        (rows.read(Float64?) || Nilwrapper).to_f32,
                       {% else %}
-                        rows.read({{value[:type]}}|Nil),
+                        rows.read({{value[:type]}}?),
                       {% end %}
                     {% else %}
                       rows.read({{value[:type]}}),
@@ -269,7 +272,7 @@ module Topaz
             {% for key, value in cols %}
               {% if value.is_a?(NamedTupleLiteral) %}
                 {% if value[:nullable] %}
-                  {{key.id}} : {{value[:type]}}|Nil,
+                  {{key.id}} : {{value[:type]}}?,
                 {% else %}
                   {{key.id}} : {{value[:type]}},
                 {% end %}
@@ -287,7 +290,7 @@ module Topaz
             {% for key, value in cols %}
               {% if value.is_a?(NamedTupleLiteral) %}
                 {% if value[:nullable] %}
-                  {{key.id}} : {{value[:type]}}|Nil,
+                  {{key.id}} : {{value[:type]}}?,
                 {% else %}
                   {{key.id}} : {{value[:type]}},
                 {% end %}
@@ -338,9 +341,8 @@ module Topaz
 
         # Note: Postgres doesn't support this
         if @id == -1 && Topaz::Db.scheme == "postgres"
-          # todo: read from sequence
-          @id = typeof(self).select.last.id if @tx.nil?
-          @id = typeof(self).in(@tx.as(DB::Transaction)).select.last.id unless @tx.nil?
+          @id = find_id_for_postgres(Topaz::Db.shared) if @tx.nil?
+          @id = find_id_for_postgres(@tx.as(DB::Transaction).connection) unless @tx.nil?
         else
           @id = res.last_insert_id.to_i32
         end
@@ -348,9 +350,19 @@ module Topaz
         @created_at = time
         @updated_at = time
 
-        @q = ""
+        refresh
 
         self
+      end
+
+      protected def find_id_for_postgres(db : DB::Database|DB::Connection)
+        id : Int64 = -1i64
+        db.query("select currval(\'#{table_name}_seq\')") do |rows|
+          rows.each do
+            id = rows.read(Int64)
+          end
+        end
+        id.to_i32
       end
 
       def to_a
@@ -434,11 +446,8 @@ module Topaz
           tx.connection.exec create_table_query
           tx.connection.exec copy_query
           tx.connection.exec "drop table if exists #{table_name}_old"
+          tx.commit
         end
-        #exec "alter table #{table_name} rename to #{table_name}_old"
-        #exec create_table_query
-        #exec copy_query
-        #exec "drop table if exists #{table_name}_old"
       end
 
       def self.create_table_query
@@ -540,6 +549,11 @@ module Topaz
         typeof(self).downcase
       end
 
+      protected def refresh
+        @q  = ""
+        @tx = nil
+      end
+
       private def self.get_type(t)
         case t.to_s
         when "String"
@@ -571,10 +585,10 @@ module Topaz
       {% for key, value in cols %}
         {% if value.is_a?(NamedTupleLiteral) %}
           {% if value[:nullable] %}
-            def {{key.id}}=(@{{key.id}} : {{value[:type]}}|Nil)
+            def {{key.id}}=(@{{key.id}} : {{value[:type]}}?)
             end
-            def {{key.id}} : {{value[:type]}}|Nil
-              return @{{key.id}}.as({{value[:type]}}|Nil)
+            def {{key.id}} : {{value[:type]}}?
+              return @{{key.id}}.as({{value[:type]}}?)
             end
           {% else %}
           def {{key.id}}=(@{{key.id}} : {{value[:type]}})
