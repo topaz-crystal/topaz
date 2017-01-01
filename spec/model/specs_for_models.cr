@@ -3,14 +3,17 @@ require "./models"
 
 macro select_db(db)
   Topaz::Db.setup("{{db.id}}")
+  Topaz::Db.show_query(true)
 
   describe Topaz do
 
     it "Empty column" do
       EmptyColumn.drop_table
       EmptyColumn.create_table
-      EmptyColumn.create
+      e = EmptyColumn.create
+      e.id.should eq(1)
       EmptyColumn.select.size.should eq(1)
+      EmptyColumn.select.first.id.should eq(1)
     end
 
     it "created_at and udpated_at" do
@@ -85,6 +88,7 @@ macro select_db(db)
 
       NullableModel.new("ok0", 12, 12.0).save
       NullableModel.create("ok1", 12, 12.0)
+      NullableModel.create("ok2", 12, nil)
 
       n0 = NullableModel.find(1)
       n0.test0.should eq("ok0")
