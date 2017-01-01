@@ -46,13 +46,9 @@ module Topaz
       protected def initialize(@id : Int32,
                                {% for key, value in cols %}
                                  {% if value.is_a?(NamedTupleLiteral) %}
-                                   {% if value[:nullable] %}
-                                     @{{key.id}} : {{value[:type]}}?,
-                                   {% else %}
-                                     @{{key.id}} : {{value[:type]}},
-                                   {% end %}
+                                   @{{key.id}} : {{value[:type]}}?,
                                  {% else %}
-                                   @{{key.id}} : {{value.id}},
+                                   @{{key.id}} : {{value.id}}?,
                                  {% end %}
                                {% end %}created_at : String, updated_at : String)
         @created_at = Time.parse(created_at, TIME_FORMAT)
@@ -226,13 +222,9 @@ module Topaz
                 rows.read(Int32), # id
                 {% for key, value in cols %}
                   {% if value.is_a?(NamedTupleLiteral) %}
-                    {% if value[:nullable] %}
-                      rows.read({{value[:type]}}?),
-                    {% else %}
-                      rows.read({{value[:type]}}),
-                    {% end %}
+                    rows.read({{value[:type]}}?),
                   {% else %}
-                    rows.read({{value.id}}),
+                    rows.read({{value.id}}?),
                   {% end %}
                 {% end %}
                 rows.read(String),
@@ -244,19 +236,21 @@ module Topaz
                 rows.read(Int64).to_i32, # id
                 {% for key, value in cols %}
                   {% if value.is_a?(NamedTupleLiteral) %}
-                    {% if value[:nullable] %}
-                      {% if value[:type].id == "Int32" %}
-                        (rows.read(Int64?) || Nilwrapper).to_i32,
-                      {% elsif value[:type].id == "Float32" %}
-                        (rows.read(Float64?) || Nilwrapper).to_f32,
-                      {% else %}
-                        rows.read({{value[:type]}}?),
-                      {% end %}
+                    {% if value[:type].id == "Int32" %}
+                      (rows.read(Int64?) || Nilwrapper).to_i32,
+                    {% elsif value[:type].id == "Float32" %}
+                      (rows.read(Float64?) || Nilwrapper).to_f32,
                     {% else %}
-                      rows.read({{value[:type]}}),
+                      rows.read({{value[:type]}}?),
                     {% end %}
                   {% else %}
-                    rows.read({{value.id}}),
+                    {% if value.id == "Int32" %}
+                      (rows.read(Int64?) || Nilwrapper).to_i32,
+                    {% elsif value.id == "Float32" %}
+                      (rows.read(Float64?) || Nilwrapper).to_f32,
+                    {% else %}
+                      rows.read({{value.id}}?),
+                    {% end %}
                   {% end %}
                 {% end %}
                 rows.read(String),
@@ -378,7 +372,7 @@ module Topaz
         {
           "id" => @id,
           {% for key, value in cols %}"{{key.id}}" => @{{key.id}},{% end %}
-            "created_at" => "#{@created_at}",
+          "created_at" => "#{@created_at}",
           "updated_at" => "#{@updated_at}",
         }
       end
@@ -449,9 +443,7 @@ module Topaz
       end
 
       def self.create_table_query
-                
         q = ""
-        
         case Topaz::Db.scheme
         when "mysql"
           q =  <<-QUERY

@@ -8,7 +8,7 @@ require "../src/topaz"
 # You can define columns for your model as follows
 class SampleModel < Topaz::Model
   # Basically, each column needs 'name' and 'type'.
-  # Currently, String, Int32, Float32 and Float64 are supported
+  # Currently, String, Int32, Int64, Float32 and Float64 are supported
   # In this sample, we use SQLite3 as database.
   columns(
     name: String,

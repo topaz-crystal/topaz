@@ -37,7 +37,7 @@ c1 = JsonChild.create(12i64, p.id.to_i64)
 c2 = JsonChild.create(15i64, p.id.to_i64)
 c3 = JsonChild.create(23i64, p.id.to_i64)
 
-# created_at and udpated_at are just examples
+# output of created_at and udpated_at columns are just examples
 p.to_json
 # => {"id":1,"name":"John","created_at":"2016-12-26T02:47:34+0900","updated_at":"2016-12-26T02:47:34+0900"}
 c1.to_json
