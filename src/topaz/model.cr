@@ -543,7 +543,7 @@ module Topaz
         @tx = nil
       end
 
-      private def self.get_type(t)
+      protected def self.get_type(t)
         case t.to_s
         when "String"
           return "text"
@@ -569,6 +569,9 @@ module Topaz
 
       class Set < Array(self)
         # Model set
+        def to_json
+          "[#{map(&.to_json).join(", ")}]"
+        end
       end
 
       {% for key, value in cols %}
