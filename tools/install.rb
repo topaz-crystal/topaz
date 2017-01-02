@@ -23,7 +23,7 @@ debug: src/$PROJNAME$.cr
 release: src/$PROJNAME$.cr
 \tcrystal build src/$PROJNAME$.cr --release -o bin/server
 
-run: build
+run:
 \tbin/server
 
 clean:
