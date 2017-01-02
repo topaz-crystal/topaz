@@ -246,5 +246,9 @@ Dir.chdir install_dir do
 
     add_file "src/#{project_name}.cr",
              server_cr.gsub(tag("PROJNAME"), project_name).gsub(tag("DB"), database)
+
+    exec_cmd "make help -s"
   end
 end
+
+log "Execute `make setup` to start #{install_dir}/#{project_name}"
