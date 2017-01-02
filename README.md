@@ -4,8 +4,6 @@
 [![Dependency Status](https://shards.rocks/badge/github/topaz-crystal/topaz/status.svg)](https://shards.rocks/github/topaz-crystal/topaz)
 [![devDependency Status](https://shards.rocks/badge/github/topaz-crystal/topaz/dev_status.svg)](https://shards.rocks/github/topaz-crystal/topaz)
 
-**If you need light data mapping model, check [db_model](https://github.com/tbrand/db_model)**
-
 Topaz is a simple and useful db wrapper for crystal lang.
 Topaz is inspired by active record design pattern, but not fully implemented.
 See [sample code](https://github.com/topaz-crystal/topaz/blob/master/samples) for detail.
@@ -13,8 +11,13 @@ See [sample code](https://github.com/topaz-crystal/topaz/blob/master/samples) fo
 Depends on [crystal-lang/crystal-mysql](https://github.com/crystal-lang/crystal-mysql) and [crystal-lang/crystal-sqlite3](https://github.com/crystal-lang/crystal-sqlite3)
 
 ## Installation
+You can start to create a project with Topaz and Kamel by
 
-Add this to your application's `shard.yml`:
+```
+/usr/bin/ruby -e "$(curl -fsSL https://raw.githubusercontent.com/topaz-crystal/topaz/master/tools/install.rb)"
+```
+
+If you want to add Topaz manually, add this to your application's `shard.yml`:
 
 ```yaml
 dependencies:
