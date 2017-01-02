@@ -13,7 +13,7 @@ Depends on [crystal-lang/crystal-mysql](https://github.com/crystal-lang/crystal-
 ## Installation
 You can start to create a project with Topaz and Kamel by
 
-```shell
+```bash
 /usr/bin/ruby -e "$(curl -fsSL https://raw.githubusercontent.com/topaz-crystal/topaz/master/tools/install.rb)"
 ```
 
