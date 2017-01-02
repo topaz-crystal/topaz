@@ -13,6 +13,7 @@ Topaz::Db.setup("sqlite3://./db/sample.db")
 #
 # We assume the case that we've already defined
 #
+# [Defined Model]
 # class MigrationSample < Topaz::Model
 #   columns(
 #     name: String,
@@ -29,15 +30,15 @@ Topaz::Db.setup("sqlite3://./db/sample.db")
 # After that, you've removed 'age' column and added score column like
 #
 # [Redefined model]
-class MigrationSample < Topaz::Model
-  columns(
-    name: String,
-    score: Int32,
-  )
-end
+# class MigrationSample < Topaz::Model
+#   columns(
+#     name: String,
+#     score: Int32,
+#   )
+# end
 #
 # In this case, you can call Topaz::Model#migrate_table to keep the remaining data like
-MigrationSample.migrate_table
-MigrationSample.find(1).name
-# => "SampleName"
+# MigrationSample.migrate_table
+# MigrationSample.find(1).name
+#  => "SampleName"
 
