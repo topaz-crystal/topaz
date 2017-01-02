@@ -3,7 +3,7 @@ require "../../spec_helper"
 macro before_migration(db)
 
   Topaz::Db.setup("{{db.id}}")
-  
+
   class MigTest < Topaz::Model
     columns(
       col0: String,
@@ -36,13 +36,13 @@ end
 macro exec_migration(db)
 
   Topaz::Db.setup("{{db.id}}")
-  
+
   class MigTest < Topaz::Model
     columns(
       col0: String,
       col1: {type: Int32, nullable: true},
       col1_5: {type: String, nullable: true}, # added column
-      #col2: {type: Float64, nullable: true}, # removed column
+      # col2: {type: Float64, nullable: true}, # removed column
       col3: String, # added column
       col4: Int32, # added column
     )

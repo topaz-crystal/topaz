@@ -10,7 +10,7 @@ require "../src/topaz"
 # Time format is defined at Topaz::Model::TIME_FORMAT.
 
 class TimeModel < Topaz::Model
-  columns # empty column
+  columns # Empty column
 end
 
 Topaz::Db.setup("sqlite3://./db/sample.db")

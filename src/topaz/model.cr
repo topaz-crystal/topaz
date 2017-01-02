@@ -12,7 +12,6 @@ module Topaz
 
     @id = -1
     @q : String?
-    
     # @tx is reset when select, save, update, delete is called.
     @tx : DB::Transaction?
 
@@ -419,10 +418,10 @@ module Topaz
       end
 
       protected def self.copy_data_from_old
-        
+
         copied_columns = Array(String).new
         defined = defined_columns
-        
+
         registered_columns.each do |col|
           copied_columns.push(col) if defined.includes?(col)
         end
@@ -498,7 +497,7 @@ module Topaz
           ,updated_at varchar(64));
           QUERY
         end
-        
+
         q = q.gsub("\n", "")
       end
 
@@ -564,7 +563,7 @@ module Topaz
         when "Bool"
           return "tinyint"
         when "Time"
-          return "datetime"
+          return "varchar(64)"
         end
       end
 

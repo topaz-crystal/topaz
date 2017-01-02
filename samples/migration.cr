@@ -40,5 +40,4 @@ Topaz::Db.setup("sqlite3://./db/sample.db")
 # In this case, you can call Topaz::Model#migrate_table to keep the remaining data like
 # MigrationSample.migrate_table
 # MigrationSample.find(1).name
-#  => "SampleName"
-
+# => "SampleName"
