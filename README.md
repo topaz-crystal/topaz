@@ -8,7 +8,7 @@ Topaz is a simple and useful db wrapper for crystal lang.
 Topaz is inspired by active record design pattern, but not fully implemented.
 See [sample code](https://github.com/topaz-crystal/topaz/blob/master/samples) for detail.
 [Here](https://github.com/topaz-crystal/topaz-kemal-sample) is another sample that shows how Topaz works in Kemal.  
-Depends on [crystal-lang/crystal-mysql](https://github.com/crystal-lang/crystal-mysql) and [crystal-lang/crystal-sqlite3](https://github.com/crystal-lang/crystal-sqlite3)
+Depends on [crystal-lang/crystal-mysql](https://github.com/crystal-lang/crystal-mysql), [crystal-lang/crystal-sqlite3](https://github.com/crystal-lang/crystal-sqlite3) and [crystal-pg](https://github.com/will/crystal-pg)
 
 ## Installation
 You can start to create a project with Topaz and Kamel by
