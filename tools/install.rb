@@ -155,8 +155,15 @@ def tag t
   "$#{t}$"
 end
 
+def command_check_for cmd
+  raise "#{cmd} not found!" if `type #{cmd} 2>/dev/null`.empty?
+end
+
 def command_check
   log "Command check ..."
+  command_check_for "crystal"
+  command_check_for "shards"
+  command_check_for "make"
   log "Passed!"
 end
 
