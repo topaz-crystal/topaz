@@ -9,7 +9,7 @@ module Topaz
     TIME_FORMAT = "%F %T:%L %z"
 
     @id : Int32 = -1
-    @q  : String?
+    @q : String?
     @tx : DB::Transaction?
 
     macro columns(cols)
