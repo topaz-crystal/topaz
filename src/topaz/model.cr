@@ -7,12 +7,9 @@ require "json"
 module Topaz
   class Model
     TIME_FORMAT = "%F %T:%L %z"
-    getter created_at : Time?
-    getter updated_at : Time?
 
-    @id = -1
-    @q : String?
-    # @tx is reset when select, save, update, delete is called.
+    @id : Int32 = -1
+    @q  : String?
     @tx : DB::Transaction?
 
     macro columns(cols)
@@ -26,7 +23,7 @@ module Topaz
             {{key}}: {{value.id}}?,
           {% end %}
         {% end %}
-        created_at: Time?,
+          created_at: Time?,
         updated_at: Time?)
 
       def initialize({% for key, value in cols %}
@@ -183,14 +180,14 @@ module Topaz
       protected def set_value_of(_key : String, _value : DB::Any)
         {% if cols.size > 0 %}
           case _key
-            {% for key, value in cols %}
-              when "{{key.id}}"
-                {% if value.is_a?(NamedTupleLiteral) %}
-                  @{{key.id}} = _value if _value.is_a?({{value[:type]}})
-                {% else %}
-                  @{{key.id}} = _value if _value.is_a?({{value.id}})
-                {% end %}
-            {% end %}
+               {% for key, value in cols %}
+               when "{{key.id}}"
+                 {% if value.is_a?(NamedTupleLiteral) %}
+                   @{{key.id}} = _value if _value.is_a?({{value[:type]}})
+                 {% else %}
+                   @{{key.id}} = _value if _value.is_a?({{value.id}})
+                 {% end %}
+               {% end %}
           end
         {% end %}
       end
@@ -226,7 +223,7 @@ module Topaz
                     rows.read({{value.id}}?),
                   {% end %}
                 {% end %}
-                rows.read(String),
+                  rows.read(String),
                 rows.read(String)
               ))
             when "sqlite3"
@@ -252,7 +249,7 @@ module Topaz
                     {% end %}
                   {% end %}
                 {% end %}
-                rows.read(String),
+                  rows.read(String),
                 rows.read(String)
               ))
             end
@@ -318,7 +315,7 @@ module Topaz
           {% end %}
         {% end %}
 
-        time = Time.now
+          time = Time.now
 
         keys.push("created_at")
         keys.push("updated_at")
@@ -371,7 +368,7 @@ module Topaz
         {
           "id" => @id,
           {% for key, value in cols %}"{{key.id}}" => @{{key.id}},{% end %}
-          "created_at" => "#{@created_at}",
+            "created_at" => "#{@created_at}",
           "updated_at" => "#{@updated_at}",
         }
       end
@@ -412,7 +409,7 @@ module Topaz
             arr.push("{{key.id}}")
           {% end %}
         {% end %}
-        arr.push("created_at")
+          arr.push("created_at")
         arr.push("updated_at")
         arr
       end
@@ -580,18 +577,18 @@ module Topaz
             def {{key.id}}=(@{{key.id}} : {{value[:type]}}?)
             end
             def {{key.id}} : {{value[:type]}}?
-              return @{{key.id}}.as({{value[:type]}}?)
+                return @{{key.id}}.as({{value[:type]}}?)
             end
           {% else %}
-          def {{key.id}}=(@{{key.id}} : {{value[:type]}})
-          end
+            def {{key.id}}=(@{{key.id}} : {{value[:type]}})
+            end
             def {{key.id}} : {{value[:type]}}
               return @{{key.id}}.as({{value[:type]}})
             end
           {% end %}
         {% else %}
-        def {{key.id}}=(@{{key.id}} : {{value.id}})
-        end
+          def {{key.id}}=(@{{key.id}} : {{value.id}})
+          end
           def {{key.id}} : {{value.id}}
             return @{{key.id}}.as({{value.id}})
           end
@@ -603,7 +600,7 @@ module Topaz
       {% if cols.size > 0 %}
         columns({{cols}})
       {% else %}
-      columns({} of Symbol => String)
+        columns({} of Symbol => String)
       {% end %}
     end
 
