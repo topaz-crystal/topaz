@@ -577,7 +577,7 @@ module Topaz
             def {{key.id}}=(@{{key.id}} : {{value[:type]}}?)
             end
             def {{key.id}} : {{value[:type]}}?
-                return @{{key.id}}.as({{value[:type]}}?)
+                               return @{{key.id}}.as({{value[:type]}}?)
             end
           {% else %}
             def {{key.id}}=(@{{key.id}} : {{value[:type]}})

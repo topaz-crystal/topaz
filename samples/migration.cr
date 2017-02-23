@@ -1,7 +1,7 @@
 require "../src/topaz"
 
-Topaz::Db.setup("sqlite3://./db/sample.db")
-
+# Topaz::Db.setup("sqlite3://./db/sample.db")
+#
 ###################
 # Table Migration #
 ###################
