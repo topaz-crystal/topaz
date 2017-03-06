@@ -6,8 +6,6 @@ require "json"
 # since the calling contruct every necessary functions
 module Topaz
   class Model
-    TIME_FORMAT = "%F %T:%L %z"
-
     @id : Int32 = -1
     @q : String?
     @tx : DB::Transaction?
@@ -47,8 +45,8 @@ module Topaz
                                    @{{key.id}} : {{value.id}}?,
                                  {% end %}
                                {% end %}created_at : String, updated_at : String)
-        @created_at = Time.parse(created_at, TIME_FORMAT)
-        @updated_at = Time.parse(updated_at, TIME_FORMAT)
+        @created_at = Time.parse(created_at, Topaz::Db.time_format)
+        @updated_at = Time.parse(updated_at, Topaz::Db.time_format)
       end
 
       protected def initialize
@@ -170,7 +168,7 @@ module Topaz
           end
         end
 
-        updated += "updated_at = \'#{time.to_s(TIME_FORMAT)}\'"
+        updated += "updated_at = \'#{time.to_s(Topaz::Db.time_format)}\'"
         @updated_at = time
         @q = "update #{table_name} set #{updated} #{@q}"
         exec
@@ -319,8 +317,8 @@ module Topaz
 
         keys.push("created_at")
         keys.push("updated_at")
-        vals.push("\'#{time.to_s(TIME_FORMAT)}\'")
-        vals.push("\'#{time.to_s(TIME_FORMAT)}\'")
+        vals.push("\'#{time.to_s(Topaz::Db.time_format)}\'")
+        vals.push("\'#{time.to_s(Topaz::Db.time_format)}\'")
 
         _keys = keys.join(", ")
         _vals = vals.join(", ")

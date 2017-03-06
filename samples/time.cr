@@ -23,11 +23,11 @@ TimeModel.create
 
 t = TimeModel.find(1)
 t.created_at
-# => 2016-12-26 00:32:59 +0900 (just an example)
+# => 2016-12-26 00:32:59 +0900 (just as an example)
 typeof(t.created_at)
 # => Time|Nil
 t.updated_at
-# => 2016-12-26 00:32:59 +0900 (just an example)
+# => 2016-12-26 00:32:59 +0900 (just as an example)
 typeof(t.updated_at)
 # => Time|Nil
 

@@ -21,8 +21,8 @@ macro select_db(db)
       e0 = EmptyColumn.create
       e0.id.should eq(1)
       e1 = EmptyColumn.find(1)
-      e0.created_at.as(Time).to_s(Topaz::Model::TIME_FORMAT).should eq(e1.created_at.as(Time).to_s(Topaz::Model::TIME_FORMAT))
-      e0.updated_at.as(Time).to_s(Topaz::Model::TIME_FORMAT).should eq(e1.updated_at.as(Time).to_s(Topaz::Model::TIME_FORMAT))
+      e0.created_at.as(Time).to_s(Topaz::Db.time_format).should eq(e1.created_at.as(Time).to_s(Topaz::Db.time_format))
+      e0.updated_at.as(Time).to_s(Topaz::Db.time_format).should eq(e1.updated_at.as(Time).to_s(Topaz::Db.time_format))
       sleep 1
       e0.update
       e2 = EmptyColumn.create

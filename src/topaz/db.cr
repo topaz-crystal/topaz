@@ -7,7 +7,7 @@ module Topaz
   class Db
     @@shared : DB::Database?
 
-    # Setup a database by connection uri as String
+    # Setup a database by connection uri
     # See official sample for detail
     # For MySQL https://github.com/crystal-lang/crystal-mysql
     # For SQLite3 https://github.com/crystal-lang/crystal-sqlite3
@@ -21,6 +21,7 @@ module Topaz
       @@shared = DB.open(uri)
     end
 
+    # Get shared db instance
     def self.shared
       check
       @@shared.as(DB::Database)
@@ -40,6 +41,19 @@ module Topaz
     def self.scheme
       check
       @@shared.as(DB::Database).uri.scheme
+    end
+
+    # Return time_format for each platform
+    def self.time_format : String
+      if instance = @@shared
+        case instance.uri.scheme
+        when "mysql", "sqlite3"
+          return "%F %T:%L %z"
+        when "postgres"
+          return "%F %T.%L %z"
+        end
+      end
+      ""
     end
 
     protected def self.check
