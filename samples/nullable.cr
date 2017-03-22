@@ -11,6 +11,7 @@ class NullableModel < Topaz::Model
     name: String,
     name_nullable: {type: String, nullable: true},
     name_not_nullable: {type: String, nullable: false},
+    time_nullable: {type: Time, nullable: true}
   )
 end
 
@@ -21,7 +22,7 @@ NullableModel.drop_table
 NullableModel.create_table
 
 # You can create the model with null column
-NullableModel.create("name0", nil, "name1")
+NullableModel.create("name0", nil, "name1", nil)
 
 n = NullableModel.find(1)
 n.name_nullable.nil?
