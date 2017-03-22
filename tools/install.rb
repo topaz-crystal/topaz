@@ -195,6 +195,16 @@ def shard_yml_update
   shard_yml["dependencies"]["kemal"]["github"] = "kemalcr/kemal"
   shard_yml["dependencies"]["topaz"] = {}
   shard_yml["dependencies"]["topaz"]["github"] = "topaz-crystal/topaz"
+  if database.start_with?("sqlite3")
+    shard_yml["dependencies"]["sqlite3"] = {}
+    shard_yml["dependencies"]["sqlite3"]["github"] = "crystal-lang/crystal-sqlite3"
+  elsif database.start_with?("mysql")
+    shard_yml["dependencies"]["mysql"] = {}
+    shard_yml["dependencies"]["mysql"]["github"] = "crystal-lang/crystal-mysql"
+  elsif database.start_with?("postgres")
+    shard_yml["dependencies"]["pg"] = {}
+    shard_yml["dependencies"]["pg"]["github"] = "will/crystal-pg"
+  end
 
   File.delete "shard.yml"
   YAML.dump shard_yml, File.open("shard.yml", "w")
@@ -216,17 +226,17 @@ database     = input "Which database do you use?",
                      "sqlite3://./db/default.db"
 
 Dir.chdir install_dir do
-  
+
   exec_cmd "crystal init app #{project_name}"
-  
+
   Dir.chdir project_name do
-    
+
     log "Constructing project..."
-    
+
     shard_yml_update
 
     FileUtils.rm "src/#{project_name}.cr"
-    
+
     Dir.mkdir "bin"
     Dir.mkdir "db"
     Dir.mkdir "src/models"
