@@ -6,19 +6,26 @@ require "json"
 # since the calling contruct every necessary functions
 module Topaz
   class Model
-    @id : Int32 = -1
     @q : String?
     @tx : DB::Transaction?
 
-    macro columns(cols)
+    macro columns(_cols)
+      {% id_type = _cols[:id] ? _cols[:id] : Int32 %}
+
+      {% cols = {} of KeyType => ValueType %}
+      {% for key, value in _cols %}
+        {% cols[key] = value if key != :id %}
+      {% end %}
+
+      @id : {{ id_type }} = {{ id_type }}.new(-1) # Int32.new(-1) | Int64.new(-1)
 
       JSON.mapping(
-        id: Int32,
+        id: {{ id_type }},
         {% for key, value in cols %}
           {% if value.is_a?(NamedTupleLiteral) %}
-            {{key}}: {{value[:type]}}?,
+            {{key.id}}: {{value[:type]}}?,
           {% else %}
-            {{key}}: {{value.id}}?,
+            {{key.id}}: {{value.id}}?,
           {% end %}
         {% end %}
           created_at: Time?,
@@ -37,7 +44,7 @@ module Topaz
                      {% end %})
       end
 
-      protected def initialize(@id : Int32,
+      protected def initialize(@id : {{ id_type }},
                                {% for key, value in cols %}
                                  {% if value.is_a?(NamedTupleLiteral) %}
                                    @{{key.id}} : {{value[:type]}}?,
@@ -147,13 +154,13 @@ module Topaz
           {% for key, value, idx in cols %}
             {% if value.is_a?(NamedTupleLiteral) %}
               {% if value[:nullable] %}
-                updated += "{{key}} = \'#{@{{key}}}\', " unless @{{key}}.nil?
-                updated += "{{key}} = null, " if @{{key}}.nil?
+                updated += "{{key.id}} = \'#{@{{key.id}}}\', " unless @{{key.id}}.nil?
+                updated += "{{key.id}} = null, " if @{{key.id}}.nil?
               {% else %}
-                updated += "{{key}} = \'#{@{{key}}}\', " unless @{{key}}.nil?
+                updated += "{{key.id}} = \'#{@{{key.id}}}\', " unless @{{key.id}}.nil?
               {% end %}
             {% else %}
-              updated += "{{key}} = \'#{@{{key}}}\', " unless @{{key}}.nil?
+              updated += "{{key.id}} = \'#{@{{key.id}}}\', " unless @{{key.id}}.nil?
             {% end %}
           {% end %}
         else
@@ -213,7 +220,7 @@ module Topaz
             when "mysql", "postgres"
               set.push(
                 typeof(self).new(
-                rows.read(Int32), # id
+                rows.read({{ id_type.id }}), # id
                 {% for key, value in cols %}
                   {% if value.is_a?(NamedTupleLiteral) %}
                     rows.read({{value[:type]}}?),
@@ -227,7 +234,7 @@ module Topaz
             when "sqlite3"
               set.push(
                 typeof(self).new(
-                rows.read(Int64).to_i32, # id
+                {{ id_type }}.new(rows.read(Int64)), # id
                 {% for key, value in cols %}
                   {% if value.is_a?(NamedTupleLiteral) %}
                     {% if value[:type].id == "Int32" %}
@@ -313,7 +320,7 @@ module Topaz
           {% end %}
         {% end %}
 
-          time = Time.now
+        time = Time.now
 
         keys.push("created_at")
         keys.push("updated_at")
@@ -332,7 +339,7 @@ module Topaz
           @id = find_id_for_postgres(Topaz::Db.shared) if @tx.nil?
           @id = find_id_for_postgres(@tx.as(DB::Transaction).connection) unless @tx.nil?
         else
-          @id = res.last_insert_id.to_i32
+          @id = {{ id_type }}.new(res.last_insert_id)
         end
 
         @created_at = time
@@ -350,7 +357,7 @@ module Topaz
             id = rows.read(Int64)
           end
         end
-        id.to_i32
+        {{ id_type }}.new(id)
       end
 
       def to_a
@@ -441,7 +448,7 @@ module Topaz
         case Topaz::Db.scheme
         when "mysql"
           q =  <<-QUERY
-          create table if not exists #{table_name}(id int auto_increment,
+          create table if not exists #{table_name}(id #{get_type({{ id_type }})} not null auto_increment,
           {% for key, value in cols %}
           {% if value.is_a?(NamedTupleLiteral) %}
           {{key.id}} #{get_type({{value[:type]}})}
@@ -459,7 +466,7 @@ module Topaz
           QUERY
         when "postgres"
           q =  <<-QUERY
-          create table if not exists #{table_name}(id int default nextval(\'#{table_name}_seq\') not null
+          create table if not exists #{table_name}(id #{get_type({{ id_type }})} default nextval(\'#{table_name}_seq\') not null
           {% for key, value in cols %}
           {% if value.is_a?(NamedTupleLiteral) %}
           ,{{key.id}} #{get_type({{value[:type]}})}
@@ -476,7 +483,7 @@ module Topaz
           QUERY
         when "sqlite3"
           q = <<-QUERY
-          create table if not exists #{table_name}(id integer primary key
+          create table if not exists #{table_name}(id #{get_type({{ id_type }})} primary key
           {% for key, value in cols %}
           {% if value.is_a?(NamedTupleLiteral) %}
           ,{{key.id}} #{get_type({{value[:type]}})}
@@ -493,7 +500,7 @@ module Topaz
           QUERY
         end
 
-        q = q.gsub("\n", "")
+        q.gsub("\n", "")
       end
 
       def self.create_table
@@ -545,7 +552,7 @@ module Topaz
         when "Int32"
           return "int" if Topaz::Db.scheme == "mysql"
           return "integer" if Topaz::Db.scheme == "postgres"
-          return "tinyint" if Topaz::Db.scheme == "sqlite3"
+          return "integer" if Topaz::Db.scheme == "sqlite3"
         when "Int64"
           return "bigint" if Topaz::Db.scheme == "mysql" || Topaz::Db.scheme == "postgres"
           return "integer" if Topaz::Db.scheme == "sqlite3"

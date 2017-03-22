@@ -97,9 +97,10 @@ See [sample code](https://github.com/topaz-crystal/topaz/blob/master/samples/ass
 * `Model#to_json` and `Model#from_json`
 * `created_at` and `updated_at` column
 * Nullable column
+* Change id from Int32 to Int64
 
 **Supported data types.**  
-String, Int32, Int64, Float32, Float64  
+String, Int32, Int64, Float32, Float64
 
 ## Development
 
