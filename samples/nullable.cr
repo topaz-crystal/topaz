@@ -1,4 +1,5 @@
 require "../src/topaz"
+require "sqlite3"
 
 ###################
 # Nullable Column #
