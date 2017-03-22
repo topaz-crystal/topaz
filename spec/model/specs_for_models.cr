@@ -41,6 +41,14 @@ macro select_db(db)
       AllTypes.select.size.should eq(1)
     end
 
+    it "Creates Int64 id" do
+      IdInt64.drop_table
+      IdInt64.create_table
+      IdInt64.create
+      IdInt64.select.size.should eq(1)
+      IdInt64.select.first.id.class.to_s.should eq "Int64"
+    end
+
     it "Search models" do
       SearchedModel.drop_table
       SearchedModel.create_table

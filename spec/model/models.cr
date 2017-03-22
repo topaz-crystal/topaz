@@ -13,6 +13,12 @@ class AllTypes < Topaz::Model
   )
 end
 
+class IdInt64 < Topaz::Model
+  columns(
+    id: Int64,
+  )
+end
+
 class SearchedModel < Topaz::Model
   columns(
     name: String,
