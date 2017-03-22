@@ -1,7 +1,5 @@
 require "singleton"
-require "mysql"
-require "sqlite3"
-require "pg"
+require "db"
 
 module Topaz
   class Db

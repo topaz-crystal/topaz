@@ -1,4 +1,5 @@
 require "./spec_helper"
+require "sqlite3"
 
 describe Topaz do
   it "Setup db without any errors" do

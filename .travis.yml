@@ -9,7 +9,7 @@ env:
   - TRAVIS_POSTGRESQL_VERSION=9.2
   - TRAVIS_POSTGRESQL_VERSION=9.1
 before_install:
-  - mysql -uroot -e "create database topaz"
+  - mysql -uroot -e "create database topaz_test"
   - sudo apt-get autoremove sqlite3
   - sudo apt-get install python-software-properties
   - sudo apt-add-repository -y ppa:travis-ci/sqlite3
@@ -20,6 +20,6 @@ before_install:
   - sudo service postgresql stop
   - sudo service postgresql start $TRAVIS_POSTGRESQL_VERSION
   - createuser root
-  - createdb topaz
-  - export DATABASE_URL=postgres://root@localhost/topaz
+  - createdb topaz_test
+  - export DATABASE_URL=postgres://root@localhost/topaz_test
 script: make

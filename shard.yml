@@ -7,11 +7,17 @@ authors:
 license: MIT
 
 dependencies:
-  mysql:
-    github: crystal-lang/crystal-mysql
-  sqlite3:
-    github: crystal-lang/crystal-sqlite3
-  pg:
-    github: will/crystal-pg
   singleton:
     github: topaz-crystal/crystal-singleton
+  db:
+    github: crystal-lang/crystal-db
+
+development_dependencies:
+  mysql:
+    github: crystal-lang/crystal-mysql
+    branch: master
+  sqlite3:
+    github: crystal-lang/crystal-sqlite3
+    branch: master
+  pg:
+    github: will/crystal-pg

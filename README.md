@@ -25,6 +25,9 @@ dependencies:
     github: topaz-crystal/topaz
 ```
 
+And install necessary drivers [SQLite3](https://github.com/crystal-lang/crystal-sqlite3),
+ [MySQL](https://github.com/crystal-lang/crystal-mysql), [PostgreSQL](https://github.com/will/crystal-pg).
+
 ## Usage
 
 **1. Setup DB**
@@ -97,6 +100,23 @@ See [sample code](https://github.com/topaz-crystal/topaz/blob/master/samples/ass
 
 **Supported data types.**  
 String, Int32, Int64, Float32, Float64  
+
+## Development
+
+Setting up PostgreSQL:
+
+```
+$ psql
+  # CREATE USER root WITH CREATEDB;
+  # CREATE DATABASE topaz_test WITH OWNER = root;
+```
+
+Setting up MySQL:
+
+```
+$ mysql -u root
+mysql> create database topaz_test;
+```
 
 ## Contributing
 
