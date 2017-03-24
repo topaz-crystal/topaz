@@ -51,9 +51,7 @@ module Topaz
                                  {% else %}
                                    @{{key.id}} : {{value.id}}?,
                                  {% end %}
-                               {% end %}created_at : String, updated_at : String)
-        @created_at = Time.parse(created_at, Topaz::Db.time_format)
-        @updated_at = Time.parse(updated_at, Topaz::Db.time_format)
+                               {% end %}@created_at : Time, @updated_at : Time)
       end
 
       protected def initialize
@@ -154,19 +152,20 @@ module Topaz
           {% for key, value, idx in cols %}
             {% if value.is_a?(NamedTupleLiteral) %}
               {% if value[:nullable] %}
-                updated += "{{key.id}} = \'#{@{{key.id}}}\', " unless @{{key.id}}.nil?
+
+                updated += "{{key.id}} = #{to_db_value(@{{key.id}}, true)}, " unless @{{key.id}}.nil?
                 updated += "{{key.id}} = null, " if @{{key.id}}.nil?
               {% else %}
-                updated += "{{key.id}} = \'#{@{{key.id}}}\', " unless @{{key.id}}.nil?
+                updated += "{{key.id}} = #{to_db_value(@{{key.id}})}, " unless @{{key.id}}.nil?
               {% end %}
             {% else %}
-              updated += "{{key.id}} = \'#{@{{key.id}}}\', " unless @{{key.id}}.nil?
+              updated += "{{key.id}} = #{to_db_value(@{{key.id}})}, " unless @{{key.id}}.nil?
             {% end %}
           {% end %}
         else
           data.each_with_index do |key, value, idx|
             unless value.nil?
-              updated += "#{key} = \'#{value}\', "
+              updated += "#{key} = #{to_db_value(value)}, "
               set_value_of(key.to_s, value) unless @id == -1
             else
               updated += "#{key} = null, "
@@ -210,6 +209,18 @@ module Topaz
         res.as(Set)
       end
 
+      protected def read_value(rows, type : T.class) : T forall T
+        if type == Time
+          Time.parse(rows.read(String), Topaz::Db.time_format)
+        elsif type == Time?
+          if val = rows.read(String?)
+            Time.parse(val, Topaz::Db.time_format)
+          end
+        else
+          rows.read(type)
+        end.as(T)
+      end
+
       protected def read_result(db : DB::Database|DB::Connection)
 
         set = Set.new
@@ -223,13 +234,13 @@ module Topaz
                 rows.read({{ id_type.id }}), # id
                 {% for key, value in cols %}
                   {% if value.is_a?(NamedTupleLiteral) %}
-                    rows.read({{value[:type]}}?),
+                    read_value(rows, {{value[:type]}}?),
                   {% else %}
-                    rows.read({{value.id}}?),
+                    read_value(rows, {{value.id}}?),
                   {% end %}
                 {% end %}
-                  rows.read(String),
-                rows.read(String)
+                read_value(rows, Time),
+                read_value(rows, Time)
               ))
             when "sqlite3"
               set.push(
@@ -242,7 +253,7 @@ module Topaz
                     {% elsif value[:type].id == "Float32" %}
                       (rows.read(Float64?) || Nilwrapper).to_f32,
                     {% else %}
-                      rows.read({{value[:type]}}?),
+                      read_value(rows, {{value[:type]}}?),
                     {% end %}
                   {% else %}
                     {% if value.id == "Int32" %}
@@ -250,12 +261,12 @@ module Topaz
                     {% elsif value.id == "Float32" %}
                       (rows.read(Float64?) || Nilwrapper).to_f32,
                     {% else %}
-                      rows.read({{value.id}}?),
+                      read_value(rows, {{value.id}}?),
                     {% end %}
                   {% end %}
                 {% end %}
-                  rows.read(String),
-                rows.read(String)
+                read_value(rows, Time),
+                read_value(rows, Time)
               ))
             end
           end
@@ -300,6 +311,13 @@ module Topaz
         model
       end
 
+      private def to_db_value(val, nullable = false) : String
+        case val
+        when Time then "'#{val.to_s(Topaz::Db.time_format)}'"
+        else "'#{val}'"
+        end
+      end
+
       def save
         keys = [] of String
         vals = [] of String
@@ -308,15 +326,15 @@ module Topaz
           {% if value.is_a?(NamedTupleLiteral) %}
             {% if value[:nullable] %}
               keys.push("{{key.id}}")
-              vals.push("'#{@{{key.id}}}'") unless @{{key.id}}.nil?
+              vals.push(to_db_value(@{{key.id}}, nullable: true)) unless @{{key.id}}.nil?
               vals.push("null") if @{{key.id}}.nil?
             {% else %}
               keys.push("{{key.id}}") unless @{{key.id}}.nil?
-              vals.push("'#{@{{key.id}}}'") unless @{{key.id}}.nil?
+              vals.push(to_db_value(@{{key.id}})) unless @{{key.id}}.nil?
             {% end %}
           {% else %}
             keys.push("{{key.id}}") unless @{{key.id}}.nil?
-            vals.push("'#{@{{key.id}}}'") unless @{{key.id}}.nil?
+            vals.push(to_db_value(@{{key.id}})) unless @{{key.id}}.nil?
           {% end %}
         {% end %}
 

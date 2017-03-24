@@ -11,7 +11,9 @@ require "sqlite3"
 # Time format is defined at Topaz::Model::TIME_FORMAT.
 
 class TimeModel < Topaz::Model
-  columns # Empty column
+  columns(
+    finished_at: Time
+  )
 end
 
 Topaz::Db.setup("sqlite3://./db/sample.db")
@@ -20,7 +22,7 @@ TimeModel.drop_table
 TimeModel.create_table
 
 # create a model
-TimeModel.create
+TimeModel.create(finished_at: Time.now)
 
 t = TimeModel.find(1)
 t.created_at
@@ -31,6 +33,9 @@ t.updated_at
 # => 2016-12-26 00:32:59 +0900 (just as an example)
 typeof(t.updated_at)
 # => Time|Nil
+t.finished_at
+typeof(t.finished_at)
+t.finished_at -= Time::Span.new(5, 0, 0, 0)
 
 sleep 1 # wait 1 sec
 t.update

@@ -37,8 +37,17 @@ macro select_db(db)
     it "Check all types" do
       AllTypes.drop_table
       AllTypes.create_table
-      AllTypes.create("test", 10, 12.0f32, 10.0)
+      AllTypes.create("test", 10, 12.0f32, 10.0, Time.now)
       AllTypes.select.size.should eq(1)
+    end
+
+    it "Check Time" do
+      AllTypes.drop_table
+      AllTypes.create_table
+      times = [Time.now - 10, Time.now]
+      AllTypes.create("test", 10, 12.0f32, 10.0, times[0])
+      AllTypes.create("test", 10, 12.0f32, 10.0, times[1])
+      AllTypes.select.zip(times).each { |m, time| m.type_time == time }
     end
 
     it "Creates Int64 id" do

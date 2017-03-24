@@ -10,6 +10,7 @@ class AllTypes < Topaz::Model
     type_integer: Int32,
     type_float: Float32,
     type_double: Float64,
+    type_time: Time,
   )
 end
 
