@@ -10,24 +10,6 @@ See [sample code](https://github.com/topaz-crystal/topaz/blob/master/samples) fo
 [Here](https://github.com/topaz-crystal/topaz-kemal-sample) is another sample that shows how Topaz works in Kemal.  
 Depends on [crystal-lang/crystal-mysql](https://github.com/crystal-lang/crystal-mysql), [crystal-lang/crystal-sqlite3](https://github.com/crystal-lang/crystal-sqlite3) and [crystal-pg](https://github.com/will/crystal-pg)
 
-## Installation
-You can start to create a project with Topaz and Kamel by
-
-```bash
-/usr/bin/ruby -e "$(curl -fsSL https://raw.githubusercontent.com/topaz-crystal/topaz/master/tools/install.rb)"
-```
-
-If you want to add Topaz manually, add this to your application's `shard.yml`:
-
-```yaml
-dependencies:
-  topaz:
-    github: topaz-crystal/topaz
-```
-
-And install necessary drivers [SQLite3](https://github.com/crystal-lang/crystal-sqlite3),
- [MySQL](https://github.com/crystal-lang/crystal-mysql), [PostgreSQL](https://github.com/will/crystal-pg).
-
 ## Usage
 
 **1. Setup DB**
