@@ -53,7 +53,8 @@ class DefaultModel < Topaz::Model
   columns(
     test0: String,
     test1: {type: String, default: "OK1"},
-    test2: {type: String, default: "OK2"},
+    test2: {type: String, default: "OK2", nullable: true},
+    test3: {type: String, nullable: true},
   )
 end
 

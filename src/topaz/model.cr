@@ -37,7 +37,7 @@ module Topaz
                            {% if value[:default] %}
                              @{{key.id}} : {{value[:type]}}? = {{value[:default]}},
                            {% else %}
-                             @{{key.id}} : {{value[:type]}}?,
+                             @{{key.id}} : {{value[:type]}}? = nil,
                            {% end %}
                          {% else %}
                            {% if value[:default] %}
@@ -288,7 +288,7 @@ module Topaz
                   {% if value[:default] %}
                     {{key.id}} : {{value[:type]}}? = {{value[:default]}},
                   {% else %}
-                    {{key.id}} : {{value[:type]}}?,
+                    {{key.id}} : {{value[:type]}}? = nil,
                   {% end %}
                 {% else %}
                   {% if value[:default] %}
@@ -314,7 +314,7 @@ module Topaz
                   {% if value[:default] %}
                     {{key.id}} : {{value[:type]}}? = {{value[:default]}},
                   {% else %}
-                    {{key.id}} : {{value[:type]}}?,
+                    {{key.id}} : {{value[:type]}}? = nil,
                   {% end %}
                 {% else %}
                   {% if value[:default] %}
