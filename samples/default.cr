@@ -34,8 +34,8 @@ DefaultModel.create_table
 
 # You can create models with default values like this
 DefaultModel.create("val0", "val1", "val2") # <- with_nil_default is "nil"
-DefaultModel.create("val0", "val1") # <- with_nil_default is "nil" and with_default2 is "default value 2"
-DefaultModel.create("val0") # <- with_nil_default is "nil", with_default is "default value" and with_default2 is "default value 2"
+DefaultModel.create("val0", "val1")         # <- with_nil_default is "nil" and with_default2 is "default value 2"
+DefaultModel.create("val0")                 # <- with_nil_default is "nil", with_default is "default value" and with_default2 is "default value 2"
 
 DefaultModel.find(3).with_default2
 # => "default value 2"
