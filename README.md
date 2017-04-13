@@ -1,6 +1,6 @@
 <img src="https://cloud.githubusercontent.com/assets/3483230/20856901/fad1885e-b95f-11e6-848d-c46e33d8290e.png" width="100px"/>
 
-# Topaz [![Build Status](https://travis-ci.org/topaz-crystal/topaz.svg?branch=master)](https://travis-ci.org/topaz-crystal/topaz)
+# Topaz [![Build Status](https://travis-ci.org/topaz-crystal/topaz.svg?branch=master)](https://travis-ci.org/topaz-crystal/topaz) [![GitHub release](https://img.shields.io/github/release/topaz-crystal/topaz.svg)]()
 [![Dependency Status](https://shards.rocks/badge/github/topaz-crystal/topaz/status.svg)](https://shards.rocks/github/topaz-crystal/topaz)
 [![devDependency Status](https://shards.rocks/badge/github/topaz-crystal/topaz/dev_status.svg)](https://shards.rocks/github/topaz-crystal/topaz)
 
