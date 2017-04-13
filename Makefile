@@ -30,3 +30,4 @@ sample:
 	crystal run ./samples/migration.cr
 	crystal run ./samples/time.cr
 	crystal run ./samples/nullable.cr
+	crystal run ./samples/default.cr

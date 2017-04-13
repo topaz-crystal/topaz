@@ -49,6 +49,14 @@ class NullableModel < Topaz::Model
   )
 end
 
+class DefaultModel < Topaz::Model
+  columns(
+    test0: String,
+    test1: {type: String, default: "OK1"},
+    test2: {type: String, default: "OK2"},
+  )
+end
+
 class JsonParent < Topaz::Model
   columns(name: String)
   has_many(
