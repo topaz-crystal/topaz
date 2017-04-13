@@ -28,15 +28,23 @@ module Topaz
             {{key.id}}: {{value.id}}?,
           {% end %}
         {% end %}
-          created_at: Time?,
+        created_at: Time?,
         updated_at: Time?)
 
       def initialize({% for key, value in cols %}
                        {% if value.is_a?(NamedTupleLiteral) %}
                          {% if value[:nullable] %}
-                           @{{key.id}} : {{value[:type]}}?,
+                           {% if value[:default] %}
+                             @{{key.id}} : {{value[:type]}}? = {{value[:default]}},
+                           {% else %}
+                             @{{key.id}} : {{value[:type]}}? = nil,
+                           {% end %}
                          {% else %}
-                           @{{key.id}} : {{value[:type]}},
+                           {% if value[:default] %}
+                             @{{key.id}} : {{value[:type]}} = {{value[:default]}},
+                           {% else %}
+                             @{{key.id}} : {{value[:type]}},
+                           {% end %}
                          {% end %}
                        {% else %}
                          @{{key.id}} : {{value.id}},
@@ -152,7 +160,6 @@ module Topaz
           {% for key, value, idx in cols %}
             {% if value.is_a?(NamedTupleLiteral) %}
               {% if value[:nullable] %}
-
                 updated += "{{key.id}} = #{to_db_value(@{{key.id}}, true)}, " unless @{{key.id}}.nil?
                 updated += "{{key.id}} = null, " if @{{key.id}}.nil?
               {% else %}
@@ -278,9 +285,17 @@ module Topaz
             {% for key, value in cols %}
               {% if value.is_a?(NamedTupleLiteral) %}
                 {% if value[:nullable] %}
-                  {{key.id}} : {{value[:type]}}?,
+                  {% if value[:default] %}
+                    {{key.id}} : {{value[:type]}}? = {{value[:default]}},
+                  {% else %}
+                    {{key.id}} : {{value[:type]}}? = nil,
+                  {% end %}
                 {% else %}
-                  {{key.id}} : {{value[:type]}},
+                  {% if value[:default] %}
+                    {{key.id}} : {{value[:type]}} = {{value[:default]}},
+                  {% else %}
+                    {{key.id}} : {{value[:type]}},
+                  {% end %}
                 {% end %}
               {% else %}
                 {{key.id}} : {{value.id}},
@@ -296,9 +311,17 @@ module Topaz
             {% for key, value in cols %}
               {% if value.is_a?(NamedTupleLiteral) %}
                 {% if value[:nullable] %}
-                  {{key.id}} : {{value[:type]}}?,
+                  {% if value[:default] %}
+                    {{key.id}} : {{value[:type]}}? = {{value[:default]}},
+                  {% else %}
+                    {{key.id}} : {{value[:type]}}? = nil,
+                  {% end %}
                 {% else %}
-                  {{key.id}} : {{value[:type]}},
+                  {% if value[:default] %}
+                    {{key.id}} : {{value[:type]}} = {{value[:default]}},
+                  {% else %}
+                    {{key.id}} : {{value[:type]}},
+                  {% end %}
                 {% end %}
               {% else %}
                 {{key.id}} : {{value.id}},

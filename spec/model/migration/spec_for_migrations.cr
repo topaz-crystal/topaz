@@ -40,25 +40,25 @@ macro exec_migration(db)
   class MigTest < Topaz::Model
     columns(
       col0: String,
+      col0_1: String, # added column
+      col0_2: Int32, # added column
       col1: {type: Int32, nullable: true},
       col1_5: {type: String, nullable: true}, # added column
       # col2: {type: Float64, nullable: true}, # removed column
-      col3: String, # added column
-      col4: Int32, # added column
     )
   end
 
   describe "Execute migration" do
     it "migrate table" do
       MigTest.migrate_table
-      m0 = MigTest.create("mname0", 13, "1_5", "added column1", 33)
-      m1 = MigTest.create("mname1", 14, "1_6", "added column2", 34)
+      m0 = MigTest.create("mname0", "added column1", 33, 13, "1_5")
+      m1 = MigTest.create("mname1", "added column2", 34, 14, "1_6")
 
       m0.id.should eq(4)
       m1.id.should eq(5)
 
       m0.col1_5.should eq("1_5")
-      m1.col4.should eq(34)
+      m1.col0_2.should eq(34)
 
       m2 = MigTest.find(4)
       m2.col0.should eq("mname0")

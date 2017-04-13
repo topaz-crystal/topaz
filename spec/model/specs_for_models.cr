@@ -136,6 +136,48 @@ macro select_db(db)
       n5.test2.should eq(nil)
     end
 
+    it "Default column" do
+      DefaultModel.drop_table
+      DefaultModel.create_table
+
+      DefaultModel.create("ok0", "ok1", "ok2", "ok3") # 1
+      DefaultModel.create("ok0", "ok1", "ok2") # 2
+      DefaultModel.create("ok0", "ok1", nil) # 3
+      DefaultModel.create("ok0", "ok1") # 4
+      DefaultModel.create("ok0") # 5
+
+      d0 = DefaultModel.find(1)
+      d1 = DefaultModel.find(2)
+      d2 = DefaultModel.find(3)
+      d3 = DefaultModel.find(4)
+      d4 = DefaultModel.find(5)
+
+      d0.test0.should eq "ok0"
+      d0.test1.should eq "ok1"
+      d0.test2.should eq "ok2"
+      d0.test3.should eq "ok3"
+
+      d1.test0.should eq "ok0"
+      d1.test1.should eq "ok1"
+      d1.test2.should eq "ok2"
+      d1.test3.should eq nil
+
+      d2.test0.should eq "ok0"
+      d2.test1.should eq "ok1"
+      d2.test2.should eq nil
+      d2.test3.should eq nil
+
+      d3.test0.should eq "ok0"
+      d3.test1.should eq "ok1"
+      d3.test2.should eq "OK2"
+      d3.test3.should eq nil
+
+      d4.test0.should eq "ok0"
+      d4.test1.should eq "OK1"
+      d4.test2.should eq "OK2"
+      d4.test3.should eq nil
+    end
+
     it "json" do
 
       JsonParent.drop_table
