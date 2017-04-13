@@ -145,7 +145,20 @@ module Topaz
         @q = "where id = #{@id}" unless @id == -1
         @q = "delete from #{table_name} #{@q}"
         exec
+        @destroyed = true
         refresh
+      end
+
+      def destroyed?
+        @destroyed ||= false
+      end
+
+      def new_record?
+        @id == -1
+      end
+
+      def persisted?
+        !(new_record? || destroyed?)
       end
 
       def update(**data)

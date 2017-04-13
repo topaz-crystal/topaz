@@ -30,8 +30,8 @@ macro select_db(db)
       e3 = EmptyColumn.find(2)
       s0 = e0.updated_at.as(Time) - e0.created_at.as(Time)
       s1 = e3.created_at.as(Time) - e0.created_at.as(Time)
-      (s0.seconds >= 1).should eq(true)
-      (s1.seconds >= 1).should eq(true)
+      (s0.seconds >= 1).should be_truthy
+      (s1.seconds >= 1).should be_truthy
     end
 
     it "Check all types" do
@@ -257,6 +257,52 @@ macro select_db(db)
         TransactionModel.in(tx).select.size.should eq(4)
         TransactionModel.in(tx).delete
         TransactionModel.in(tx).select.size.should eq(0)
+      end
+    end
+
+    describe "Persistence Check" do
+      PersistenceModel.drop_table
+      PersistenceModel.create_table
+
+      describe "New Models" do
+        n = PersistenceModel.new("val")
+
+        it "Are Not Persisted" do
+          n.new_record?.should be_truthy
+          n.destroyed?.should  be_falsey
+          n.persisted?.should  be_falsey
+        end
+
+        it "Saved Models Are Persisted" do
+          n.save
+          n.new_record?.should be_falsey
+          n.destroyed?.should  be_falsey
+          n.persisted?.should  be_truthy
+        end
+      end
+
+      it "Create Values Are Persisted" do
+        c = PersistenceModel.create("val")
+        c.new_record?.should be_falsey
+        c.destroyed?.should  be_falsey
+        c.persisted?.should  be_truthy
+      end
+
+      it "Existing Records Are Persisted" do
+        id = PersistenceModel.create("example").id
+        e = PersistenceModel.find(id)
+        e.new_record?.should be_falsey
+        e.destroyed?.should  be_falsey
+        e.persisted?.should  be_truthy
+      end
+
+      it "Destroyed Records Are No Longer Persisted" do
+        id = PersistenceModel.create("example").id
+        r = PersistenceModel.find(id)
+        r.delete
+        r.new_record?.should be_falsey
+        r.destroyed?.should  be_truthy
+        r.persisted?.should  be_falsey
       end
     end
   end

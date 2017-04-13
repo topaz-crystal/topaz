@@ -76,3 +76,7 @@ end
 class TransactionModel < Topaz::Model
   columns(name: String)
 end
+
+class PersistenceModel < Topaz::Model
+  columns(persist: String)
+end
