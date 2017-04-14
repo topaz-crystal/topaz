@@ -142,7 +142,7 @@ module Topaz
       end
 
       def delete
-        @q = "where id = #{@id}" unless @id == -1
+        @q = "where id = #{@id}" unless new_record?
         @q = "delete from #{table_name} #{@q}"
         exec
         @destroyed = true
@@ -163,7 +163,7 @@ module Topaz
 
       def update(**data)
 
-        @q = "where id = #{@id}" unless @id == -1
+        @q = "where id = #{@id}" unless new_record?
 
         updated = ""
 
@@ -186,10 +186,10 @@ module Topaz
           data.each_with_index do |key, value, idx|
             unless value.nil?
               updated += "#{key} = #{to_db_value(value)}, "
-              set_value_of(key.to_s, value) unless @id == -1
+              set_value_of(key.to_s, value) unless new_record?
             else
               updated += "#{key} = null, "
-              set_value_of(key.to_s, value) unless @id == -1
+              set_value_of(key.to_s, value) unless new_record?
             end
           end
         end
@@ -389,7 +389,7 @@ module Topaz
         res = exec
 
         # Note: Postgres doesn't support this
-        if @id == -1 && Topaz::Db.scheme == "postgres"
+        if new_record? && Topaz::Db.scheme == "postgres"
           @id = find_id_for_postgres(Topaz::Db.shared) if @tx.nil?
           @id = find_id_for_postgres(@tx.as(DB::Transaction).connection) unless @tx.nil?
         else
