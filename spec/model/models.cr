@@ -61,7 +61,7 @@ end
 class JsonParent < Topaz::Model
   columns(name: String)
   has_many(
-    childlen: {model: JsonChild, key: p_id}
+    children: {model: JsonChild, key: p_id}
   )
 end
 

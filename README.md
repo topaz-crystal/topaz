@@ -49,7 +49,7 @@ require "topaz"
 
 class SampleParent < Topaz::Model
   columns # Empty columns
-  has_many(childlen: {model: SampleChild, key: parent_id})
+  has_many(children: {model: SampleChild, key: parent_id})
 end
 
 class SampleChild < Topaz::Model
@@ -65,7 +65,7 @@ child1 = SampleChild.create(p.id)
 child2 = SampleChild.create(p.id)
 child3 = SampleChild.create(p.id)
 
-p.childlen.size
+p.children.size
 # => 3
 
 child1.parent.id
