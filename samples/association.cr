@@ -10,9 +10,9 @@ require "sqlite3"
 class SampleParent < Topaz::Model
   columns # Empty columns
   # This meant that SampleParent has multiple SampleChilds
-  # You can access it as childlen where parent_id of the childlen equals to the id
+  # You can access it as children where parent_id of the children equals to the id
   has_many(
-    childlen: {model: SampleChild, key: parent_id}
+    children: {model: SampleChild, key: parent_id}
   )
 end
 
@@ -40,15 +40,15 @@ SampleChild.create_table
 # Let me create a parent
 p = SampleParent.create
 
-# Here we create 3 childlen belong to the parent
+# Here we create 3 children belong to the parent
 child1 = SampleChild.create(p.id.to_i64)
 child2 = SampleChild.create(p.id.to_i64)
 child3 = SampleChild.create(p.id.to_i64)
 
-# Select all childlen
-p.childlen.size
+# Select all children
+p.children.size
 # => 3
-p.childlen.first.id
+p.children.first.id
 # => 1
 
 # Find a parent
